@@ -83,6 +83,11 @@ cada sesión.
 
 ## Backlog P2 — alcance
 
+- [ ] **Excel (.xlsx).** Cargar un libro, listar las hojas y elegir cuál importar.
+      DuckDB 1.1.1 (el que trae duckdb-wasm 1.29.0) no tiene `read_xlsx`; opciones:
+      (a) vendorizar **SheetJS** (~900 KB, client-side, parsea hojas → CSV → pasa por
+      `loadBuffer`), (b) vendorizar la extensión `spatial` (~4 MB, `st_read` vía GDAL,
+      frágil), (c) subir duckdb-wasm a un build con DuckDB ≥ 1.2. Recomendado: (a).
 - [ ] **Múltiples relaciones.** Cargar más de un archivo y permitir `JOIN`.
 - [ ] **Exportar el resultado a Parquet** (además de CSV).
 - [ ] **Compartir por URL.** Serializar solo el SQL en el hash — nunca los datos.
@@ -106,6 +111,18 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-08 — Fix: CSV no-UTF-8 (`?v=8`)
+
+- Reporte: un CSV real fallaba con «Invalid unicode (byte sequence mismatch)» —
+  DuckDB lee CSV como UTF-8 estricto y la planilla venía en Windows-1252.
+- `normalizeTextBytes()` en `loadBuffer`: detecta BOM (UTF-8/UTF-16 LE/BE), valida
+  UTF-8 con `TextDecoder({fatal:true})` y si falla cae a `windows-1252` (nunca falla
+  byte a byte). Registra siempre bytes UTF-8. La barra de archivo muestra
+  «reinterpretado desde …» cuando hubo conversión.
+- Verificado con CSV en cp1252, UTF-16 LE (BOM) y UTF-8 (BOM); UTF-8 limpio pasa sin
+  tocar. Pendiente relacionado: **soporte de Excel (.xlsx) con selección de hoja** —
+  ver backlog P2.
 
 ### 2026-09-08 — Camino C (persistencia y perfilado)
 

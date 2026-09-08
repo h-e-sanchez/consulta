@@ -92,6 +92,26 @@ function extensionOf(name) {
   return m ? m[1] : "";
 }
 
+// DuckDB lee CSV como UTF-8 estricto y falla ante bytes inválidos (típico de planillas
+// exportadas en Windows-1252 o "Unicode text" UTF-16). Normalizamos a UTF-8 acá:
+// respetamos el BOM, validamos UTF-8, y si no lo es caemos a Windows-1252 (nunca falla
+// byte a byte). Devuelve los bytes ya normalizados y el nombre del encoding de origen
+// (null si ya era UTF-8 sin BOM y no se tocó nada).
+function normalizeTextBytes(buffer) {
+  const b = new Uint8Array(buffer);
+  if (b[0] === 0xff && b[1] === 0xfe)
+    return { bytes: new TextEncoder().encode(new TextDecoder("utf-16le").decode(b.subarray(2))), encoding: "UTF-16 LE" };
+  if (b[0] === 0xfe && b[1] === 0xff)
+    return { bytes: new TextEncoder().encode(new TextDecoder("utf-16be").decode(b.subarray(2))), encoding: "UTF-16 BE" };
+  if (b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) return { bytes: b.subarray(3), encoding: "UTF-8 (BOM)" };
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(b);
+    return { bytes: b, encoding: null };
+  } catch {
+    return { bytes: new TextEncoder().encode(new TextDecoder("windows-1252").decode(b)), encoding: "Windows-1252 / Latin-1" };
+  }
+}
+
 async function loadBuffer(name, buffer) {
   fileError.hidden = true;
   const ext = extensionOf(name);
@@ -109,8 +129,15 @@ async function loadBuffer(name, buffer) {
 
   const virtualName = `input.${ext}`;
   const sizeBytes = buffer.byteLength; // registerFileBuffer transfiere el buffer al worker y lo detacha
+  let encNote = null;
   try {
-    await state.db.registerFileBuffer(virtualName, new Uint8Array(buffer));
+    let regBytes = new Uint8Array(buffer);
+    if (ext !== "parquet") {
+      const norm = normalizeTextBytes(buffer);
+      regBytes = norm.bytes;
+      encNote = norm.encoding;
+    }
+    await state.db.registerFileBuffer(virtualName, regBytes);
     const reader =
       ext === "parquet"
         ? `read_parquet('${virtualName}')`
@@ -124,7 +151,7 @@ async function loadBuffer(name, buffer) {
   await refreshSchema();
   const [{ n }] = await queryRows(`SELECT count(*)::BIGINT AS n FROM ${state.table}`);
   state.rowCount = Number(n);
-  updateFileBar(name, sizeBytes, state.rowCount, ext);
+  updateFileBar(name, sizeBytes, state.rowCount, ext, encNote);
 
   await renderPreview();
   await renderProfile();
@@ -152,11 +179,12 @@ async function refreshSchema() {
   }));
 }
 
-function updateFileBar(name, bytes, rows, ext) {
+function updateFileBar(name, bytes, rows, ext, encNote) {
   $("#wb-name").textContent = name;
   $("#wb-meta").textContent =
     `${ext.toUpperCase()} · ${rows.toLocaleString("es-CL")} filas · ` +
-    `${state.schema.length} columnas · ${formatBytes(bytes)}`;
+    `${state.schema.length} columnas · ${formatBytes(bytes)}` +
+    (encNote ? ` · reinterpretado desde ${encNote}` : "");
 }
 
 const qid = (name) => `"${String(name).replace(/"/g, '""')}"`;

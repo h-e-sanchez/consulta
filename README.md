@@ -14,6 +14,8 @@
   archivo del usuario nunca sale del navegador.
 - **Columnar y delimitado.** Ingesta nativa de Parquet (`read_parquet`) y de CSV con
   inferencia de esquema sobre el archivo completo (`read_csv_auto`, `SAMPLE_SIZE=-1`).
+  El CSV se normaliza a UTF-8 antes de leerlo (respeta el BOM; cae a Windows-1252 si no
+  es UTF-8 válido) — las planillas exportadas en Latin-1 o «Unicode text» cargan igual.
 - **Perfilado enriquecido en una pasada.** Por columna: tipo, nulos, ceros,
   cardinalidad, cuantiles (p05 / mediana / p95), media y desviación — cada métrica
   con su definición al pasar el cursor — más un desglose de frecuencias de las
