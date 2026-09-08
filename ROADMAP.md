@@ -39,7 +39,8 @@ cada sesión.
 - [x] Documentado en `README.md`, `glosario.html` (#vendor) y `vendor/README.md`
       (cómo regenerar al subir de versión).
 - [ ] Queda como único fetch externo: las tipografías IBM Plex (Google Fonts,
-      no bloqueante). Auto-alojarlas también sería el cierre completo.
+      no bloqueante). Auto-alojarlas también sería el cierre completo. **Plan:**
+      `docs/revision-visual-2026-09.md` §2 (P0).
 
 ### ☑ Camino C — Persistencia y perfilado — **hecho 2026-09-08** (`?v=7`)
 
@@ -109,6 +110,25 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-08 — Documentación de estilo: guía viva + revisión con fecha
+
+Sin cambios de código. Se consolidó la identidad visual (repintado teal `?v=15`,
+día/noche `?v=16`, pesos de fuente `?v=17`) en dos documentos:
+
+- **[`docs/guia-de-estilo.md`](docs/guia-de-estilo.md)** — la referencia viva:
+  tokens de color (claro/oscuro), reparto tipográfico y escala, espaciado, snippets
+  canónicos de cada componente, presupuesto de movimiento, principios de texto
+  explicativo, y un checklist para reusar la identidad en el próximo repo del
+  portafolio. Complementa a `referencias-estilo.md` (que es investigación).
+- **[`docs/revision-visual-2026-09.md`](docs/revision-visual-2026-09.md)** — la
+  auditoría con fecha y la cola de trabajo (`✅`/`⬜`/`❌`): auto-alojar las woff2
+  (cierre 100 % offline, P0), la escala `--fs-*` bypasseada por ~20 `font-size`
+  hardcodeados, colores de rol sin tokenizar, propuesta de movimiento (micro +
+  3 momentos, siempre con `prefers-reduced-motion`), 2–3 añadidos de texto
+  explicativo, y **briefs listos para pegar en nano banana** (favicon, tarjeta OG,
+  banner de README, ilustraciones de conceptos) con restricciones de estilo
+  incrustadas. Prioridad y secuencia al final.
 
 ### 2026-09-08 — Defecto siempre claro + revisión de tipografía (`?v=17`)
 
