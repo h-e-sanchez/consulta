@@ -7,9 +7,10 @@ cada sesión.
 
 ---
 
-## Presupuesto: 2–3 h por camino · orden pactado A → B → C
+## Caminos A → B → C — **los tres cerrados 2026-09-08** (`?v=7`)
 
-> Una sesión por camino. Marcá lo hecho y, si sobra tiempo, sumá algo del «relleno».
+> Una sesión por camino. El bloque de trabajo planificado quedó completo; lo que
+> sigue está en los backlogs P1/P2 de abajo.
 
 ### ☑ Camino A — Gráfico — **hecho 2026-09-08** (`?v=5`)
 
@@ -40,15 +41,25 @@ cada sesión.
 - [ ] Queda como único fetch externo: las tipografías IBM Plex (Google Fonts,
       no bloqueante). Auto-alojarlas también sería el cierre completo.
 
-### ☐ Camino C — Persistencia y perfilado
+### ☑ Camino C — Persistencia y perfilado — **hecho 2026-09-08** (`?v=7`)
 
-- [ ] **Guardar la última consulta** en `localStorage` y restaurarla al abrir.
-- [ ] **Historial** — las últimas ~15 consultas, clickeables para recuperar.
-- [ ] Si sobra: matriz de correlación entre columnas numéricas en el perfilado.
+- [x] **Guardar la última consulta** en `localStorage` (`consulta:last-sql`) y
+      restaurarla al cargar una relación (no se auto-ejecuta: puede referir a otras
+      columnas).
+- [x] **Historial** — `consulta:history`, últimas 15 consultas, dedup, clickeables,
+      botón «limpiar». Bloque bajo el panel «Ver la consulta que se ejecutó».
+- [x] **Matriz de correlación** (Pearson) entre numéricas en el perfilado: hasta 8
+      columnas, una sola consulta con `corr()`, heatmap por `|r|` con `color-mix`.
+- [x] Helper `LS` con `try/catch` en toda lectura/escritura (modo privado / cuota).
 
-### Relleno (si sobra tiempo en cualquier camino)
+### Relleno hecho
 
-- [ ] Persistir el tipo de gráfico y los ejes elegidos entre consultas.
+- [x] Persistir el **tipo de gráfico** (`consulta:chart-type`) y el toggle de
+      **etiquetas** (`consulta:chart-labels`) entre sesiones. Los ejes no: son
+      posicionales, no se traducen entre consultas distintas.
+
+### Relleno pendiente (cualquier sesión futura)
+
 - [ ] Atajo para copiar una celda de una tabla al portapapeles.
 - [ ] En «pega encabezados», detectar separador (`,` `;` tab) automáticamente. *(ya
       lo hace parcialmente — revisar TSV)*
@@ -64,10 +75,11 @@ cada sesión.
 - [ ] **Progreso de consulta.** Tiempo transcurrido; para archivos grandes, aviso de
       que la inferencia de tipos (`SAMPLE_SIZE=-1`) puede tardar — con opción de
       acotarla.
-- [ ] **Persistir la última consulta** (`localStorage`) e **historial** de consultas.
+- [x] **Persistir la última consulta** (`localStorage`) e **historial** de consultas
+      — Camino C, 2026-09-08.
 - [ ] **Archivos grandes.** Probar 50–100 MB; ajustar `SAMPLE_SIZE` según tamaño.
-- [ ] **Perfilado.** Matriz de correlación entre numéricas; marcar `VARCHAR` que
-      «parecen» fechas y ofrecer castearlas.
+- [x] **Perfilado.** Matriz de correlación entre numéricas — Camino C. Falta: marcar
+      `VARCHAR` que «parecen» fechas y ofrecer castearlas.
 
 ## Backlog P2 — alcance
 
@@ -94,6 +106,19 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-08 — Camino C (persistencia y perfilado)
+
+- Helper `LS` (get/set con `try/catch`, prefijo `consulta:`). `runQuery()` guarda
+  `last-sql` y llama `pushHistory()` al terminar OK; `loadBuffer()` restaura la
+  última consulta en el editor (sin ejecutar) y pinta el historial.
+- Historial: `#history` bajo `#explain-panel`, botones de una línea (title = SQL
+  completo), click → carga en editor + tab Consulta. Dedup, tope 15, «limpiar».
+- `renderCorrelation()` en `renderProfile()`: `corr()` de cada par (i<j) en una
+  consulta, tabla NxN con `color-mix(in srgb, var(--accent) |r|·65% …)`. Oculta si
+  hay < 2 numéricas; tope de 8 columnas.
+- Persistencia de gráfico: `chart-type` y `chart-labels` a `localStorage`;
+  `syncChartControls()` restaura el tipo antes de `deriveChartDefaults()`.
 
 ### 2026-09-08 — Camino B (offline, P0)
 

@@ -455,6 +455,39 @@ button.ghost:hover { color: var(--text); }
   text-anchor: middle;
 }
 
+/* ---- historial de consultas ---- */
+.history { margin-top: 1.25rem; }
+.history-head { display: flex; align-items: center; gap: 0.75rem; }
+.history-head h3 { margin: 0; }
+.history-list { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.6rem; }
+.history-item {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-align: left;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-item:hover { color: var(--text); border-color: var(--accent); }
+
+/* ---- matriz de correlación ---- */
+#corr-wrap { margin-top: 0.4rem; }
+#corr-table tbody th {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  position: sticky;
+  left: 0;
+}
+
 /* ---- panel explicativo ---- */
 details.explain {
   margin-top: 1.25rem;

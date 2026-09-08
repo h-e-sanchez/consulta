@@ -17,10 +17,11 @@
 - **Perfilado enriquecido en una pasada.** Por columna: tipo, nulos, ceros,
   cardinalidad, cuantiles (p05 / mediana / p95), media y desviación — cada métrica
   con su definición al pasar el cursor — más un desglose de frecuencias de las
-  columnas categóricas.
+  columnas categóricas y una **matriz de correlación** (Pearson) entre las numéricas.
 - **Editor SQL** en dialecto DuckDB contra la relación `datos`, con **plantillas**
-  (exploración → tiempo → avanzado, 3 variaciones cada una) y proyección del
-  resultado a CSV.
+  (exploración → tiempo → avanzado, 3 variaciones cada una), proyección del resultado
+  a CSV, e **historial** (últimas 15 consultas, recuperables) — la última consulta y
+  las preferencias de gráfico se restauran al reabrir (`localStorage`).
 - **Combinar por pasos.** Un asistente arma cadenas de CTEs (`WITH … AS (…)`) a
   partir de subconsultas nombradas encadenadas; trae 3 ejemplos.
 - **Gráfico.** Barras (agrupadas por serie), línea, multi-serie, área apilada y
@@ -100,9 +101,11 @@ archivo de datos del usuario nunca se transmite, con o sin fuentes.
 In-client OLAP for exploratory inspection of tabular data: SQL over CSV and Parquet,
 no backend, no ingestion, the file never leaves the browser. DuckDB-WASM on a Web
 Worker; one-pass enriched profiling (quantiles, nulls, zeros, per-dimension
-frequencies); DuckDB-dialect SQL editor with a template library; a CTE assistant that
-composes `WITH` chains; SVG charts (bar, line, multi-series, stacked area, scatter)
-with drag-to-zoom on the X axis, toggleable data labels, per-series legend and
-standalone-SVG export; CSV export. A deterministic synthetic-relation generator with
+frequencies, a Pearson correlation matrix); DuckDB-dialect SQL editor with a template
+library, a query history and last-query/chart-preference recall (`localStorage`); a
+CTE assistant that composes `WITH` chains; SVG charts (bar, line, multi-series,
+stacked area, scatter) with drag-to-zoom on the X axis, toggleable data labels,
+per-series legend and standalone-SVG export; CSV export. A deterministic
+synthetic-relation generator with
 four time-oriented shapes. The DuckDB-WASM runtime is self-hosted in `vendor/duckdb/`,
 so the site makes no CDN request even on first load. No build step.

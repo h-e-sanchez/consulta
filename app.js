@@ -134,7 +134,9 @@ async function loadBuffer(name, buffer) {
   cteState.length = 0;
   renderCteList();
   resetQueryPanel();
-  $("#sql-editor").value = defaultQuery();
+  renderHistory();
+  // Restaura la última consulta ejecutada (puede referirse a otras columnas: no se auto-ejecuta).
+  $("#sql-editor").value = LS.get("last-sql") || defaultQuery();
   selectTab("tab-preview");
   workspace.hidden = false;
   workspace.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -337,6 +339,54 @@ async function renderProfile() {
   buildProfileDefs();
 
   await renderDimensions();
+  await renderCorrelation();
+}
+
+// Matriz de correlación de Pearson entre columnas numéricas (hasta 8), una sola consulta.
+async function renderCorrelation() {
+  const host = $("#corr-wrap");
+  const nums = state.schema.filter((s) => s.numeric).slice(0, 8);
+  if (nums.length < 2) {
+    host.hidden = true;
+    return;
+  }
+  host.hidden = false;
+  const names = nums.map((s) => s.name);
+
+  const sel = [];
+  for (let i = 0; i < names.length; i++)
+    for (let j = i + 1; j < names.length; j++)
+      sel.push(`round(corr(${qid(names[i])}, ${qid(names[j])})::DOUBLE, 2) AS "c_${i}_${j}"`);
+  const [row] = await queryRows(`SELECT ${sel.join(", ")} FROM ${state.table}`);
+
+  const val = (i, j) => {
+    if (i === j) return 1;
+    const [a, b] = i < j ? [i, j] : [j, i];
+    const v = row[`c_${a}_${b}`];
+    return v == null ? null : Number(v);
+  };
+
+  const head =
+    "<thead><tr><th></th>" +
+    names.map((n) => `<th class="num">${escapeHtml(clip(n, 12))}</th>`).join("") +
+    "</tr></thead>";
+  const body =
+    "<tbody>" +
+    names
+      .map((rn, i) => {
+        const cells = names
+          .map((_, j) => {
+            const v = val(i, j);
+            if (v == null) return `<td class="num null">∅</td>`;
+            const bg = `background:color-mix(in srgb, var(--accent) ${Math.round(Math.abs(v) * 65)}%, transparent)`;
+            return `<td class="num" style="${bg}">${v.toFixed(2)}</td>`;
+          })
+          .join("");
+        return `<tr><th>${escapeHtml(clip(rn, 12))}</th>${cells}</tr>`;
+      })
+      .join("") +
+    "</tbody>";
+  $("#corr-table").innerHTML = head + body;
 }
 
 // Desglose de las columnas categóricas de baja cardinalidad: valores + frecuencia.
@@ -611,6 +661,9 @@ async function runQuery() {
   $("#explain-sql").textContent = sql;
   $("#explain-panel").hidden = false;
 
+  LS.set("last-sql", sql);
+  pushHistory(sql);
+
   syncChartControls();
 }
 
@@ -688,6 +741,8 @@ function syncChartControls() {
     ySel.add(new Option(c, i));
     sSel.add(new Option(c, i));
   });
+  const savedType = LS.get("chart-type");
+  if (savedType && CHART_TYPES.includes(savedType)) $("#chart-type").value = savedType;
   deriveChartDefaults();
   updateChartUiState();
   drawChart();
@@ -1124,6 +1179,56 @@ function formatCompact(n) {
   if (abs >= 1e3) return (n / 1e3).toFixed(1) + "k";
   return String(Math.round(n));
 }
+const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+
+// ---------------------------------------------------------------- persistencia (localStorage)
+// Todo envuelto en try/catch: modo privado, cuota llena o storage deshabilitado no rompen nada.
+const LS = {
+  get(k, fallback = null) {
+    try {
+      const v = localStorage.getItem(`consulta:${k}`);
+      return v == null ? fallback : JSON.parse(v);
+    } catch {
+      return fallback;
+    }
+  },
+  set(k, v) {
+    try {
+      localStorage.setItem(`consulta:${k}`, JSON.stringify(v));
+    } catch {
+      /* sin persistencia disponible */
+    }
+  },
+};
+
+const HISTORY_MAX = 15;
+
+function pushHistory(sql) {
+  const hist = LS.get("history", []);
+  if (hist[0] === sql) return; // no duplicar la última
+  LS.set("history", [sql, ...hist.filter((q) => q !== sql)].slice(0, HISTORY_MAX));
+  renderHistory();
+}
+
+function renderHistory() {
+  const host = $("#history-list");
+  if (!host) return;
+  const hist = LS.get("history", []);
+  $("#history").hidden = hist.length === 0;
+  host.innerHTML = "";
+  for (const sql of hist) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "history-item";
+    b.textContent = clip(sql.replace(/\s+/g, " ").trim(), 90);
+    b.title = sql;
+    b.addEventListener("click", () => {
+      $("#sql-editor").value = sql;
+      selectTab("tab-query");
+    });
+    host.appendChild(b);
+  }
+}
 
 // ---------------------------------------------------------------- generador sintético
 // PRNG determinista (mulberry32): una semilla reproduce la relación exacta.
@@ -1311,6 +1416,7 @@ $("#headers-in").addEventListener("keydown", (e) => {
 
 $("#chart-type").addEventListener("change", () => {
   setZoom(null);
+  LS.set("chart-type", $("#chart-type").value);
   deriveChartDefaults();
   updateChartUiState();
   drawChart();
@@ -1322,7 +1428,11 @@ $("#chart-type").addEventListener("change", () => {
     drawChart();
   })
 );
-$("#chart-labels").addEventListener("change", drawChart);
+$("#chart-labels").checked = LS.get("chart-labels", false) === true;
+$("#chart-labels").addEventListener("change", () => {
+  LS.set("chart-labels", $("#chart-labels").checked);
+  drawChart();
+});
 $("#chart-zoom-reset").addEventListener("click", () => {
   setZoom(null);
   drawChart();
@@ -1342,6 +1452,12 @@ $("#prof-help").addEventListener("click", () => {
   const d = $("#prof-defs");
   d.hidden = !d.hidden;
 });
+
+$("#history-clear").addEventListener("click", () => {
+  LS.set("history", []);
+  renderHistory();
+});
+renderHistory();
 
 $("#synth-btn").addEventListener("click", async (e) => {
   const btn = e.currentTarget;

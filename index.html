@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <header class="site-header">
@@ -99,6 +99,12 @@
         <div class="table-scroll"><table id="profile-table"></table></div>
         <h3>Desglose por dimensión</h3>
         <div id="dim-breakdown" class="dim-grid"></div>
+        <div id="corr-wrap" hidden>
+          <h3>Correlación entre numéricas</h3>
+          <p class="hint">Coeficiente de Pearson, de −1 a 1. Cerca de 0: sin relación lineal.
+            El color marca la magnitud (<code>|r|</code>), no el signo.</p>
+          <div class="table-scroll"><table id="corr-table"></table></div>
+        </div>
       </div>
 
       <!-- Consulta SQL -->
@@ -122,6 +128,13 @@
           <summary>Ver la consulta que se ejecutó</summary>
           <pre id="explain-sql"></pre>
         </details>
+        <div id="history" class="history" hidden>
+          <div class="history-head">
+            <h3>Historial</h3>
+            <button type="button" class="ghost" id="history-clear">limpiar</button>
+          </div>
+          <div id="history-list" class="history-list"></div>
+        </div>
       </div>
 
       <!-- Combinar (asistente de CTEs) -->
@@ -188,6 +201,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=6"></script>
+  <script type="module" src="app.js?v=7"></script>
 </body>
 </html>
