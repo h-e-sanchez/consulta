@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header class="site-header">
@@ -165,7 +165,15 @@
           <label id="chart-series-wrap" hidden>serie
             <select id="chart-series"></select>
           </label>
+          <label class="chart-chk">valores
+            <input type="checkbox" id="chart-labels">
+          </label>
         </div>
+        <div class="chart-actions">
+          <button type="button" class="ghost" id="chart-zoom-reset" hidden>reset zoom</button>
+          <button type="button" class="ghost" id="chart-download">descargar SVG</button>
+        </div>
+        <p class="hint chart-tip">Arrastra sobre el gráfico para acercar un tramo del eje X; doble clic para volver.</p>
         <p class="result-meta" id="chart-note" hidden></p>
         <div class="chart-scroll">
           <svg id="result-chart" role="img" aria-label="Gráfico del resultado de la consulta"></svg>
@@ -180,6 +188,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=4"></script>
+  <script type="module" src="app.js?v=5"></script>
 </body>
 </html>

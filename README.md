@@ -22,9 +22,12 @@
   resultado a CSV.
 - **Combinar por pasos.** Un asistente arma cadenas de CTEs (`WITH … AS (…)`) a
   partir de subconsultas nombradas encadenadas; trae 3 ejemplos.
-- **Gráfico.** Barras, línea, multi-serie, área apilada y dispersión, en SVG sin
-  librería de charting. Ejes y serie se derivan del tipo de gráfico y de las
-  columnas del resultado; 3 presets arman consulta + gráfico de un tirón.
+- **Gráfico.** Barras (agrupadas por serie), línea, multi-serie, área apilada y
+  dispersión (coloreada por serie), en SVG sin librería de charting. Ejes y serie se
+  derivan del tipo de gráfico y de las columnas del resultado; 3 presets arman
+  consulta + gráfico de un tirón. **Zoom** arrastrando un tramo del eje X (doble clic
+  o botón para volver), **etiquetas de datos** con toggle, leyenda por serie y
+  **descarga a SVG** autónomo.
 - **Utilidades.** Copiar los nombres de columna al portapapeles; pegar una línea de
   encabezados para armar un `SELECT`.
 - **Glosario.** `glosario.html` define en lenguaje llano cada término (CSV, Parquet,
@@ -89,6 +92,7 @@ In-client OLAP for exploratory inspection of tabular data: SQL over CSV and Parq
 no backend, no ingestion, the file never leaves the browser. DuckDB-WASM on a Web
 Worker; one-pass enriched profiling (quantiles, nulls, zeros, per-dimension
 frequencies); DuckDB-dialect SQL editor with a template library; a CTE assistant that
-composes `WITH` chains; SVG charts (bar, line, multi-series, stacked area, scatter);
-CSV export. A deterministic synthetic-relation generator with four time-oriented
-shapes. No build step.
+composes `WITH` chains; SVG charts (bar, line, multi-series, stacked area, scatter)
+with drag-to-zoom on the X axis, toggleable data labels, per-series legend and
+standalone-SVG export; CSV export. A deterministic synthetic-relation generator with
+four time-oriented shapes. No build step.

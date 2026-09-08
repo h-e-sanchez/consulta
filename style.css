@@ -423,7 +423,7 @@ button.ghost { cursor: pointer; color: var(--muted); }
 button.ghost:hover { color: var(--text); }
 
 /* ---- gráfico ---- */
-.chart-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin: 0.25rem 0 0.75rem; }
+.chart-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin: 0.25rem 0 0.5rem; }
 .chart-controls label {
   display: flex;
   flex-direction: column;
@@ -434,9 +434,26 @@ button.ghost:hover { color: var(--text); }
   letter-spacing: 0.04em;
   color: var(--muted);
 }
-#result-chart { width: 100%; height: 340px; display: block; }
+.chart-controls label.chart-chk { flex-direction: row; align-items: center; gap: 0.35rem; }
+.chart-chk input { width: auto; padding: 0; }
+.chart-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+.chart-actions button { font-size: 0.72rem; padding: 0.25rem 0.6rem; }
+.chart-tip { margin: 0 0 0.6rem !important; font-size: 0.72rem !important; }
+#result-chart { width: 100%; height: 340px; display: block; touch-action: none; }
+#chart-zoom-capture { cursor: crosshair; }
+.zoom-sel { fill: var(--accent); fill-opacity: 0.12; stroke: var(--accent); stroke-opacity: 0.5; stroke-dasharray: 3 2; }
 .bar-label, .axis-label { font-family: var(--mono); font-size: 0.66rem; fill: var(--text); }
 .axis-label.muted { fill: var(--muted); }
+.data-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  text-anchor: middle;
+}
 
 /* ---- panel explicativo ---- */
 details.explain {

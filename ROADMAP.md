@@ -7,19 +7,21 @@ cada sesión.
 
 ---
 
-## Mañana — presupuesto: 2–3 h · elegí **un** camino
+## Presupuesto: 2–3 h por camino · orden pactado A → B → C
 
-> Cada camino entra en 2–3 h. Marcá el elegido y, si sobra tiempo, sumá algo del
-> «relleno».
+> Una sesión por camino. Marcá lo hecho y, si sobra tiempo, sumá algo del «relleno».
 
-### ☐ Camino A — Gráfico (recomendado: es lo más visible)
+### ☑ Camino A — Gráfico — **hecho 2026-09-08** (`?v=5`)
 
-- [ ] **Zoom en el gráfico** — arrastrar para seleccionar un rango del eje X y
-      re-encuadrar; doble clic o botón «reset» para volver.
-- [ ] **Etiquetas de datos** — valor sobre cada punto/barra, con toggle
-      on/off (encenderlas siempre satura cuando hay muchos puntos).
-- [ ] Leyenda para barras y dispersión cuando hay columna de serie.
-- [ ] Botón «descargar SVG».
+- [x] **Zoom en el gráfico** — arrastrar para seleccionar un rango del eje X y
+      re-encuadrar; doble clic o botón «reset zoom» para volver.
+- [x] **Etiquetas de datos** — valor sobre cada punto/barra/último punto de serie,
+      con toggle on/off; se ocultan (con aviso) sobre 40 valores.
+- [x] Leyenda para barras (agrupadas por serie) y dispersión (coloreada por serie)
+      cuando hay columna de serie.
+- [x] Botón «descargar SVG» — clona el SVG, resuelve los `var(--…)` a color y embebe
+      las reglas de tipografía para que se vea igual fuera de la página.
+- [ ] Relleno pendiente: tooltip al pasar por un punto; más marcas en el eje Y.
 
 ### ☐ Camino B — Offline (cierra el P0)
 
@@ -46,9 +48,10 @@ cada sesión.
 
 ## Backlog P1 — robustez y uso
 
-- [ ] **Gráfico: zoom** (arrastrar rango en X) y **etiquetas de datos** (toggle).
-- [ ] **Gráfico:** leyenda en barras/dispersión con serie; más marcas de eje;
-      descargar SVG; tooltip al pasar por un punto.
+- [x] **Gráfico: zoom** (arrastrar rango en X) y **etiquetas de datos** (toggle) —
+      Camino A, 2026-09-08.
+- [x] **Gráfico:** leyenda en barras/dispersión con serie; descargar SVG — Camino A.
+- [ ] **Gráfico:** más marcas de eje; tooltip al pasar por un punto.
 - [ ] **Progreso de consulta.** Tiempo transcurrido; para archivos grandes, aviso de
       que la inferencia de tipos (`SAMPLE_SIZE=-1`) puede tardar — con opción de
       acotarla.
@@ -83,7 +86,22 @@ versión vieja unos minutos.
 
 ## Bitácora
 
-### 2026-09-08
+### 2026-09-08 — Camino A (gráfico)
+
+- **Zoom del eje X por arrastre** (`chartZoom`, siempre referido al dominio completo):
+  categórico recorta la ventana de categorías, dispersión recorta el dominio numérico.
+  Rect transparente `#chart-zoom-capture` sobre el área de plot captura el drag; botón
+  «reset zoom» + doble clic para volver; se resetea al cambiar tipo/ejes o consulta.
+- **Etiquetas de datos** con toggle (`#chart-labels`): barras, área (total apilado),
+  línea (solo la última serie) y dispersión; tope de 40 con aviso en `#chart-note`.
+- **Leyenda por serie** extendida a barras (ahora agrupadas por serie: `bw` repartido
+  entre grupos) y a dispersión (puntos coloreados por la categórica elegida).
+- **Descarga a SVG autónomo** (`downloadChartSvg`): resuelve `var(--…)` a color vía
+  `getComputedStyle` y embebe un `<style>` con la tipografía.
+- Los avisos del gráfico pasan a `setChartNote()`; `updateChartUiState()` solo maneja
+  la visibilidad del selector de serie.
+
+### 2026-09-08 — v2 y v3
 
 - Publicado como repo **público** + **GitHub Pages**.
 - **v2:** generador de 4 formas sintéticas (serie mensual · panel diario · registro

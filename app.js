@@ -638,6 +638,16 @@ function pasteHeaders() {
 // ---------------------------------------------------------------- gráfico
 const CHART_TYPES = ["barras", "linea", "multi", "area", "scatter"];
 
+// Zoom del eje X. Siempre en términos del dominio completo (sin zoom):
+//   { kind: "cat", a, b }  → índices de la lista completa de categorías
+//   { kind: "num", x0, x1 } → valores del dominio X (scatter)
+let chartZoom = null;
+
+function setZoom(z) {
+  chartZoom = z;
+  $("#chart-zoom-reset").hidden = !z;
+}
+
 function colKinds(grid) {
   const numeric = detectNumeric(grid.columns, grid.rows);
   const temporal = grid.columns.map(
@@ -648,6 +658,7 @@ function colKinds(grid) {
 
 function syncChartControls() {
   const grid = state.lastResult;
+  setZoom(null);
   const [xSel, ySel, sSel] = [$("#chart-x"), $("#chart-y"), $("#chart-series")];
   [xSel, ySel, sSel].forEach((s) => (s.innerHTML = ""));
   if (!grid) return;
@@ -679,25 +690,28 @@ function deriveChartDefaults() {
   }
   $("#chart-x").value = String(xi >= 0 ? xi : 0);
   $("#chart-y").value = String(yi >= 0 ? yi : Math.min(1, grid.columns.length - 1));
-  if (type === "multi" || type === "area") {
+  // multi/area la exigen; barras/scatter la aceptan como opcional y la pre-seleccionan
+  // si hay una categórica libre. línea es serie única y la ignora.
+  if (type === "linea") {
+    $("#chart-series").value = "-1";
+  } else {
     const si = grid.columns.findIndex((c, i) => !numeric[i] && !temporal[i] && i !== xi && i !== yi);
     $("#chart-series").value = si >= 0 ? String(si) : "-1";
-  } else {
-    $("#chart-series").value = "-1";
   }
 }
 
+// multi/area exigen serie; barras/scatter la ofrecen como opcional. Los avisos
+// (serie faltante, saturación) los emite drawChart() vía setChartNote().
 function updateChartUiState() {
   const type = $("#chart-type").value;
-  const needsSeries = type === "multi" || type === "area";
-  $("#chart-series-wrap").hidden = !needsSeries;
+  const showSeries = type === "multi" || type === "area" || type === "barras" || type === "scatter";
+  $("#chart-series-wrap").hidden = !showSeries;
+}
+
+function setChartNote(msg) {
   const note = $("#chart-note");
-  if (needsSeries && $("#chart-series").value === "-1") {
-    note.textContent = "Sin columna de serie: el resultado no tiene una categoría para separar. Elige otra columna o cambia la consulta.";
-    note.hidden = false;
-  } else {
-    note.hidden = true;
-  }
+  note.textContent = msg || "";
+  note.hidden = !msg;
 }
 
 // ---------------------------------------------------------------- presets de gráfico
@@ -766,16 +780,22 @@ function drawChart() {
   const svg = $("#result-chart");
   const grid = state.lastResult;
   svg.innerHTML = "";
-  if (!grid || grid.rows.length === 0) return;
+  if (!grid || grid.rows.length === 0) {
+    setChartNote("");
+    return;
+  }
 
   const type = $("#chart-type").value;
   const xi = Number($("#chart-x").value);
   const yi = Number($("#chart-y").value);
   const si = Number($("#chart-series").value);
+  const showLabels = $("#chart-labels").checked;
+  const notes = [];
+  const LABEL_CAP = 40;
 
   const W = 720;
   const H = 320;
-  const pad = { top: 18, right: 18, bottom: 66, left: 66 };
+  const pad = { top: 24, right: 18, bottom: 66, left: 66 }; // top deja aire para la leyenda
   const iW = W - pad.left - pad.right;
   const iH = H - pad.top - pad.bottom;
   const ns = "http://www.w3.org/2000/svg";
@@ -788,16 +808,87 @@ function drawChart() {
     return e;
   };
   const asNum = (v) => (v instanceof Date ? v.getTime() : Number(v));
+  const palette = ["var(--accent)", "#6c8ea4", "#a88b56", "#7d9a6f", "#9a6f8e", "#5f7f8a", "#b0894f", "#748c5e"];
+
+  const legend = (keys) =>
+    keys.forEach((sk, i) => {
+      add("rect", { x: pad.left + i * 90, y: 2, width: 9, height: 9, fill: palette[i % palette.length] });
+      add("text", { x: pad.left + i * 90 + 13, y: 10, class: "axis-label" }, sk.length > 10 ? sk.slice(0, 9) + "…" : sk);
+    });
+
+  const drawLabels = (pts) => {
+    if (!showLabels) return;
+    if (pts.length > LABEL_CAP) {
+      notes.push(`Etiquetas ocultas: más de ${LABEL_CAP} valores.`);
+      return;
+    }
+    pts.forEach((p) => add("text", { x: p.x, y: p.y, class: "data-label" }, formatCompact(p.v)));
+  };
+
+  // Rect transparente sobre el área de plot: arrastrar en X define el zoom.
+  // pxToDomain(a, b) traduce el rango de píxeles al nuevo chartZoom (o null).
+  const wireZoom = (pxToDomain) => {
+    const capture = add("rect", { id: "chart-zoom-capture", x: pad.left, y: pad.top, width: iW, height: iH, fill: "transparent" });
+    const localX = (evt) => {
+      const p = svg.createSVGPoint();
+      p.x = evt.clientX;
+      p.y = evt.clientY;
+      return p.matrixTransform(svg.getScreenCTM().inverse()).x;
+    };
+    const clamp = (x) => Math.max(pad.left, Math.min(pad.left + iW, x));
+    let x0 = null;
+    let sel = null;
+    capture.addEventListener("pointerdown", (evt) => {
+      x0 = clamp(localX(evt));
+      capture.setPointerCapture(evt.pointerId);
+      sel = add("rect", { class: "zoom-sel", x: x0, y: pad.top, width: 0, height: iH });
+    });
+    capture.addEventListener("pointermove", (evt) => {
+      if (x0 == null) return;
+      const x1 = clamp(localX(evt));
+      sel.setAttribute("x", Math.min(x0, x1));
+      sel.setAttribute("width", Math.abs(x1 - x0));
+    });
+    const clear = () => {
+      x0 = null;
+      if (sel) {
+        sel.remove();
+        sel = null;
+      }
+    };
+    capture.addEventListener("pointerup", (evt) => {
+      if (x0 == null) return;
+      const a = Math.min(x0, clamp(localX(evt)));
+      const b = Math.max(x0, clamp(localX(evt)));
+      clear();
+      if (b - a < 8) return;
+      const z = pxToDomain(a, b);
+      if (z) {
+        setZoom(z);
+        drawChart();
+      }
+    });
+    capture.addEventListener("pointercancel", clear);
+  };
 
   if (type === "scatter") {
-    const pts = grid.rows
+    const all = grid.rows
       .slice(0, 4000)
-      .map((r) => ({ x: asNum(r[xi]), y: asNum(r[yi]) }))
+      .map((r) => ({ x: asNum(r[xi]), y: asNum(r[yi]), s: si >= 0 && si !== xi && si !== yi ? fmtCell(r[si]).text : null }))
       .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
-    if (!pts.length) return;
-    const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
-    const xmin = Math.min(...xs), xmax = Math.max(...xs) || 1;
-    const ymin = Math.min(0, ...ys), ymax = Math.max(...ys) || 1;
+    if (!all.length) {
+      setChartNote("");
+      return;
+    }
+    const xsAll = all.map((p) => p.x);
+    const dataXmin = Math.min(...xsAll);
+    const dataXmax = Math.max(...xsAll) || 1;
+    const xmin = chartZoom?.kind === "num" ? chartZoom.x0 : dataXmin;
+    const xmax = chartZoom?.kind === "num" ? chartZoom.x1 : dataXmax;
+    const pts = all.filter((p) => p.x >= xmin && p.x <= xmax);
+    const ys = pts.map((p) => p.y);
+    const ymin = Math.min(0, ...ys);
+    const ymax = Math.max(...ys) || 1;
     const sx = (v) => pad.left + ((v - xmin) / (xmax - xmin || 1)) * iW;
     const sy = (v) => pad.top + iH - ((v - ymin) / (ymax - ymin || 1)) * iH;
     add("line", { x1: pad.left, y1: sy(ymin), x2: W - pad.right, y2: sy(ymin), stroke: "currentColor", "stroke-opacity": 0.3 });
@@ -805,31 +896,57 @@ function drawChart() {
     add("text", { x: 8, y: sy(ymin) + 4, class: "axis-label muted" }, formatCompact(ymin));
     add("text", { x: pad.left, y: H - 8, class: "axis-label muted" }, formatCompact(xmin));
     add("text", { x: W - pad.right, y: H - 8, "text-anchor": "end", class: "axis-label muted" }, formatCompact(xmax));
-    pts.forEach((p) => add("circle", { cx: sx(p.x), cy: sy(p.y), r: 2.5, fill: "var(--accent)", "fill-opacity": 0.65 }));
+
+    const sKeys = all.some((p) => p.s != null) ? [...new Set(all.map((p) => p.s))].slice(0, 8) : null;
+    const colorOf = (p) => (sKeys ? palette[Math.max(0, sKeys.indexOf(p.s)) % palette.length] : "var(--accent)");
+    pts.forEach((p) => add("circle", { cx: sx(p.x), cy: sy(p.y), r: 2.5, fill: colorOf(p), "fill-opacity": sKeys ? 0.75 : 0.65 }));
+    drawLabels(pts.map((p) => ({ x: sx(p.x), y: sy(p.y) - 5, v: p.y })));
+    if (sKeys) legend(sKeys);
+    wireZoom((a, b) => {
+      const inv = (px) => xmin + ((px - pad.left) / iW) * (xmax - xmin);
+      const nx0 = inv(a);
+      const nx1 = inv(b);
+      return nx1 - nx0 > 0 ? { kind: "num", x0: nx0, x1: nx1 } : null;
+    });
+    setChartNote(notes.join(" "));
     return;
   }
 
   // Series categóricas para barras/línea/multi/área. Barras se limita para no
   // volverse ilegible; línea/multi/área admiten miles de puntos (series de tiempo).
-  const rowsUsed = grid.rows.slice(0, type === "barras" ? 60 : 20000);
-  const cats = [];
-  const catIndex = new Map();
+  const rowsUsed = grid.rows.slice(0, type === "barras" ? 400 : 20000);
+  const allCats = [];
+  const allIndex = new Map();
   for (const r of rowsUsed) {
     const k = fmtCell(r[xi]).text;
-    if (!catIndex.has(k)) {
-      catIndex.set(k, cats.length);
-      cats.push(k);
+    if (!allIndex.has(k)) {
+      allIndex.set(k, allCats.length);
+      allCats.push(k);
     }
   }
-  const useSeries = (type === "multi" || type === "area") && si >= 0;
+  // Ventana de zoom, siempre referida a la lista completa de categorías.
+  const za = chartZoom?.kind === "cat" ? Math.max(0, chartZoom.a) : 0;
+  const zb = chartZoom?.kind === "cat" ? Math.min(allCats.length - 1, chartZoom.b) : allCats.length - 1;
+  const cats = allCats.slice(za, zb + 1);
+  const catIndex = new Map(cats.map((c, i) => [c, i]));
+
+  const seriesReq = type === "multi" || type === "area";
+  const useSeries = (seriesReq || type === "barras") && si >= 0 && si !== xi && si !== yi;
+  if (seriesReq && si < 0) notes.push("Sin columna de serie: elige una categórica o cambia la consulta.");
+
   const seriesKeys = useSeries ? [...new Set(rowsUsed.map((r) => fmtCell(r[si]).text))].slice(0, 8) : ["_"];
   const matrix = seriesKeys.map(() => new Array(cats.length).fill(0));
   for (const r of rowsUsed) {
     const ci = catIndex.get(fmtCell(r[xi]).text);
+    if (ci == null) continue;
     const sk = useSeries ? seriesKeys.indexOf(fmtCell(r[si]).text) : 0;
-    if (ci == null || sk < 0) continue;
+    if (sk < 0) continue;
     const v = asNum(r[yi]);
     if (Number.isFinite(v)) matrix[sk][ci] += v;
+  }
+
+  if (type === "barras" && cats.length * seriesKeys.length > 140) {
+    notes.push(`${cats.length}×${seriesKeys.length} barras: arrastra para acercar un tramo.`);
   }
 
   const stacked = type === "area";
@@ -847,17 +964,23 @@ function drawChart() {
   add("text", { x: 8, y: y(maxV) + 4, class: "axis-label muted" }, formatCompact(maxV));
   add("text", { x: 8, y: y(Math.max(0, minV)) + 4, class: "axis-label muted" }, formatCompact(Math.max(0, minV)));
 
-  const palette = ["var(--accent)", "#6c8ea4", "#a88b56", "#7d9a6f", "#9a6f8e", "#5f7f8a", "#b0894f", "#748c5e"];
+  const labelPts = [];
 
   if (type === "barras") {
-    matrix[0].forEach((v, ci) => {
-      const xx = pad.left + ci * bw + bw * 0.15;
-      const top = Math.min(y(0), y(v));
-      add("rect", { x: xx, y: top, width: bw * 0.7, height: Math.abs(y(v) - y(0)), fill: "var(--accent)" });
+    const groups = matrix.length;
+    const gap = 0.15;
+    const slot = (bw * (1 - gap)) / groups;
+    matrix.forEach((row, gi) => {
+      row.forEach((v, ci) => {
+        const xx = pad.left + ci * bw + (bw * gap) / 2 + gi * slot;
+        const top = Math.min(y(0), y(v));
+        add("rect", { x: xx, y: top, width: slot * 0.92, height: Math.abs(y(v) - y(0)), fill: palette[gi % palette.length] });
+        labelPts.push({ x: xx + slot * 0.46, y: top - 4, v });
+      });
     });
   } else if (type === "area") {
     const acc = new Array(cats.length).fill(0);
-    seriesKeys.forEach((sk, sidx) => {
+    seriesKeys.forEach((_, sidx) => {
       const pts = [];
       for (let ci = 0; ci < cats.length; ci++) {
         const base = acc[ci];
@@ -870,6 +993,7 @@ function drawChart() {
       d += " Z";
       add("path", { d, fill: palette[sidx % palette.length], "fill-opacity": 0.75 });
     });
+    cats.forEach((_, ci) => labelPts.push({ x: x(ci), y: y(colTotals[ci]) - 5, v: colTotals[ci] }));
   } else {
     // linea / multi
     const dots = cats.length <= 40;
@@ -878,10 +1002,14 @@ function drawChart() {
       add("path", { d, fill: "none", stroke: palette[sidx % palette.length], "stroke-width": 1.8 });
       if (dots) row.forEach((v, ci) => add("circle", { cx: x(ci), cy: y(v), r: 2, fill: palette[sidx % palette.length] }));
     });
+    // solo la última serie, para no saturar
+    matrix[matrix.length - 1].forEach((v, ci) => labelPts.push({ x: x(ci), y: y(v) - 6, v }));
   }
 
+  drawLabels(labelPts);
+
   // etiquetas del eje X (submuestreadas si son muchas)
-  const step = Math.ceil(cats.length / 12);
+  const step = Math.max(1, Math.ceil(cats.length / 12));
   cats.forEach((c, ci) => {
     if (ci % step !== 0) return;
     const cx = type === "barras" ? pad.left + ci * bw + bw / 2 : x(ci);
@@ -889,13 +1017,55 @@ function drawChart() {
     add("text", { x: cx, y: H - pad.bottom + 16, "text-anchor": "end", transform: `rotate(-40 ${cx} ${H - pad.bottom + 16})`, class: "bar-label" }, lbl);
   });
 
-  // leyenda
-  if (useSeries) {
-    seriesKeys.forEach((sk, i) => {
-      add("rect", { x: pad.left + i * 90, y: 2, width: 9, height: 9, fill: palette[i % palette.length] });
-      add("text", { x: pad.left + i * 90 + 13, y: 10, class: "axis-label" }, sk.length > 10 ? sk.slice(0, 9) + "…" : sk);
-    });
-  }
+  if (useSeries) legend(seriesKeys);
+
+  wireZoom((a, b) => {
+    const pxToCat = (px) =>
+      type === "barras"
+        ? Math.floor((px - pad.left) / bw)
+        : Math.round(((px - pad.left) / iW) * (cats.length - 1));
+    const i0 = Math.max(0, Math.min(cats.length - 1, pxToCat(a)));
+    const i1 = Math.max(0, Math.min(cats.length - 1, pxToCat(b)));
+    return i1 > i0 ? { kind: "cat", a: za + i0, b: za + i1 } : null;
+  });
+
+  setChartNote(notes.join(" "));
+}
+
+// Descarga el gráfico como SVG autónomo: resuelve los var(--…) a color y embebe
+// las reglas mínimas de tipografía para que se vea igual fuera de la página.
+function downloadChartSvg() {
+  const svg = $("#result-chart");
+  if (!svg.firstChild) return;
+  const clone = svg.cloneNode(true);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.querySelector("#chart-zoom-capture")?.remove();
+  clone.querySelectorAll(".zoom-sel").forEach((e) => e.remove());
+
+  const cs = getComputedStyle(document.documentElement);
+  const v = (n) => cs.getPropertyValue(n).trim() || "#000";
+  clone.querySelectorAll("*").forEach((el) => {
+    for (const attr of ["fill", "stroke"]) {
+      const val = el.getAttribute(attr);
+      if (val && val.startsWith("var(")) el.setAttribute(attr, v(val.slice(4, -1).split(",")[0].trim()));
+    }
+  });
+  const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+  style.textContent =
+    `text{font-family:${v("--mono") || "monospace"};}` +
+    `.bar-label,.axis-label{font-size:9px;fill:${v("--text")};}` +
+    `.axis-label.muted{fill:${v("--muted")};}` +
+    `.data-label{font-size:8px;fill:${v("--text")};paint-order:stroke;stroke:${v("--surface")};stroke-width:3px;stroke-linejoin:round;text-anchor:middle;}`;
+  clone.insertBefore(style, clone.firstChild);
+  clone.setAttribute("style", `background:${v("--surface")};color:${v("--text")}`);
+
+  const xml = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n`, xml], { type: "image/svg+xml" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "consulta-grafico.svg";
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 // ---------------------------------------------------------------- pestañas
@@ -1120,16 +1290,30 @@ $("#headers-in").addEventListener("keydown", (e) => {
 });
 
 $("#chart-type").addEventListener("change", () => {
+  setZoom(null);
   deriveChartDefaults();
   updateChartUiState();
   drawChart();
 });
 ["#chart-x", "#chart-y", "#chart-series"].forEach((s) =>
   $(s).addEventListener("change", () => {
+    setZoom(null);
     updateChartUiState();
     drawChart();
   })
 );
+$("#chart-labels").addEventListener("change", drawChart);
+$("#chart-zoom-reset").addEventListener("click", () => {
+  setZoom(null);
+  drawChart();
+});
+$("#result-chart").addEventListener("dblclick", () => {
+  if (chartZoom) {
+    setZoom(null);
+    drawChart();
+  }
+});
+$("#chart-download").addEventListener("click", downloadChartSvg);
 
 $("#cte-add").addEventListener("click", addCte);
 $("#cte-compose").addEventListener("click", composeCte);
