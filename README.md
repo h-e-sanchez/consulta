@@ -24,7 +24,7 @@
 ## Uso
 
 ```bash
-python -m http.server 8000   # los ejemplos exigen origin HTTP; fetch() no opera sobre file://
+python -m http.server 8000   # un origin HTTP: los módulos ES no cargan sobre file://
 ```
 
 ```sql
@@ -34,11 +34,13 @@ SELECT dim, sum(val) AS agg FROM datos GROUP BY dim ORDER BY agg DESC;
 
 Despliegue estático (GitHub Pages), sin paso de build.
 
-## Datos de ejemplo
+## Relación de ejemplo
 
-`data/muestra.{csv,parquet}` — serie mensual sintética por segmento (16 filas, mismo
-contenido en ambos formatos), generada por construcción. No deriva de ninguna fuente
-real.
+El generador integrado produce una relación dominio-neutro
+(`id, categoria, grupo, fecha, valor, cantidad, activo`) con tipos mixtos y nulos
+inyectados, hasta 10⁶ filas, en CSV o en Parquet — este último materializado por el
+propio DuckDB (`COPY … FORMAT PARQUET`). El PRNG es determinista: una semilla
+reproduce la relación exacta. No se versiona ningún dataset.
 
 ## Límite conocido
 

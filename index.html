@@ -20,10 +20,29 @@
         Elegir archivo
         <input type="file" id="file-input" accept=".csv,.tsv,.parquet,text/csv">
       </label>
-      <p class="muted">Sin archivo a mano:
-        <a href="#" data-sample="data/muestra.csv">muestra.csv</a> ·
-        <a href="#" data-sample="data/muestra.parquet">muestra.parquet</a>
-        — serie mensual sintética por segmento, 16 filas.</p>
+      <div class="synth">
+        <span class="synth-label">o genera una relación sintética</span>
+        <label>filas
+          <select id="synth-rows">
+            <option value="1000">1.000</option>
+            <option value="10000" selected>10.000</option>
+            <option value="100000">100.000</option>
+            <option value="1000000">1.000.000</option>
+          </select>
+        </label>
+        <label>formato
+          <select id="synth-format">
+            <option value="csv" selected>CSV</option>
+            <option value="parquet">Parquet</option>
+          </select>
+        </label>
+        <label>semilla
+          <input type="text" id="synth-seed" value="42" inputmode="numeric" size="5">
+        </label>
+        <button type="button" class="primary" id="synth-btn">Generar</button>
+      </div>
+      <p class="muted">Esquema dominio-neutro: <code>id, categoria, grupo, fecha, valor, cantidad, activo</code>
+        — tipos mixtos y nulos inyectados para ejercitar el perfilado.</p>
       <p id="file-error" class="error" hidden></p>
       <div class="engine-status" id="engine-status" data-state="idle">
         <span class="dot"></span>

@@ -15,6 +15,7 @@ const state = {
   initPromise: null,   // evita doble inicialización
   table: "datos",
   schema: [],          // [{ name, type, numeric }]
+  rowCount: 0,         // filas de la relación cargada
   lastResult: null,    // { columns, rows } del último SELECT — insumo del gráfico y el export
 };
 
@@ -105,7 +106,8 @@ async function loadBuffer(name, buffer) {
 
   await refreshSchema();
   const [{ n }] = await queryRows(`SELECT count(*)::BIGINT AS n FROM ${state.table}`);
-  updateFileBar(name, sizeBytes, Number(n), ext);
+  state.rowCount = Number(n);
+  updateFileBar(name, sizeBytes, state.rowCount, ext);
 
   await renderPreview();
   await renderProfile();
@@ -232,11 +234,35 @@ async function renderPreview() {
 }
 
 async function renderProfile() {
-  const { columns, rows } = await queryGrid(
-    `SELECT column_name, column_type, count, round(null_percentage, 1) AS null_pct,
-            approx_unique, min, max, round(avg::DOUBLE, 2) AS avg, round(std::DOUBLE, 2) AS std
+  const total = state.rowCount || 1;
+
+  // SUMMARIZE aporta tipo, cardinalidad y estadística; su null_percentage es
+  // inconsistente entre versiones, así que los nulos se cuentan aparte.
+  const stats = await queryRows(
+    `SELECT column_name, column_type, approx_unique,
+            min, max, round(avg::DOUBLE, 2) AS avg, round(std::DOUBLE, 2) AS std
      FROM (SUMMARIZE ${state.table})`
   );
+  const nullExpr = state.schema
+    .map((s) => `${total} - count("${s.name.replace(/"/g, '""')}") AS "${s.name.replace(/"/g, '""')}"`)
+    .join(", ");
+  const [nullRow] = await queryRows(`SELECT ${nullExpr} FROM ${state.table}`);
+
+  const columns = ["columna", "tipo", "nulos", "pct_nulos", "distintos_aprox", "min", "max", "media", "desv_est"];
+  const rows = stats.map((r) => {
+    const nulls = Number(nullRow[r.column_name] ?? 0);
+    return [
+      r.column_name,
+      r.column_type,
+      nulls,
+      Math.round((1000 * nulls) / total) / 10,
+      r.approx_unique,
+      r.min,
+      r.max,
+      r.avg,
+      r.std,
+    ];
+  });
   renderTable($("#profile-table"), columns, rows, { numericCols: detectNumeric(columns, rows) });
 }
 
@@ -481,19 +507,60 @@ dropZone.addEventListener("drop", async (e) => {
   if (file) loadBuffer(file.name, await file.arrayBuffer());
 });
 
-document.querySelectorAll("[data-sample]").forEach((a) =>
-  a.addEventListener("click", async (e) => {
-    e.preventDefault();
-    const path = a.dataset.sample;
-    try {
-      const res = await fetch(path);
-      if (!res.ok) throw new Error(res.statusText);
-      await loadBuffer(path.split("/").pop(), await res.arrayBuffer());
-    } catch (err) {
-      showError(`No se pudo cargar el ejemplo (${cleanErr(err)}). Sírvelo por HTTP, no abras index.html con file://.`);
-    }
-  })
-);
+// ---------------------------------------------------------------- generador sintético
+// PRNG determinista (mulberry32) para que una semilla reproduzca la relación exacta.
+function mulberry32(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Esquema dominio-neutro con tipos mixtos y nulos, pensado para ejercitar el perfilado.
+function generateSyntheticCSV(nRows, seed) {
+  const rng = mulberry32(seed);
+  const categoria = ["alfa", "bravo", "charlie", "delta", "echo", "foxtrot"];
+  const grupo = ["norte", "centro", "sur"];
+  const originMs = Date.UTC(2024, 0, 1);
+  const DAY = 86400000;
+  const out = ["id,categoria,grupo,fecha,valor,cantidad,activo"];
+  for (let i = 1; i <= nRows; i++) {
+    const cat = rng() < 0.02 ? "" : categoria[(rng() * categoria.length) | 0];
+    const grp = grupo[(rng() * grupo.length) | 0];
+    const fecha = new Date(originMs + ((rng() * 730) | 0) * DAY).toISOString().slice(0, 10);
+    const valor = rng() < 0.03 ? "" : (Math.exp(2 + rng() * 3.2) * 1000).toFixed(2);
+    const cantidad = (rng() * 500) | 0;
+    const activo = rng() < 0.68;
+    out.push(`${i},${cat},${grp},${fecha},${valor},${cantidad},${activo}`);
+  }
+  return out.join("\n") + "\n";
+}
+
+async function loadSynthetic(nRows, seed, format) {
+  const csv = new TextEncoder().encode(generateSyntheticCSV(nRows, seed));
+  const stem = `sintetico_${nRows}_s${seed}`;
+  if (format === "csv") {
+    await loadBuffer(`${stem}.csv`, csv);
+    return;
+  }
+  // Parquet: se materializa con el propio DuckDB (COPY … FORMAT PARQUET) y se recarga.
+  try {
+    await initEngine();
+  } catch {
+    showError("El motor SQL no está disponible para materializar el Parquet.");
+    return;
+  }
+  await state.db.registerFileBuffer("synthsrc.csv", csv);
+  await state.conn.query(
+    `COPY (SELECT * FROM read_csv_auto('synthsrc.csv', SAMPLE_SIZE=-1))
+     TO 'synth.parquet' (FORMAT PARQUET, COMPRESSION 'zstd')`
+  );
+  const pq = await state.db.copyFileToBuffer("synth.parquet");
+  await loadBuffer(`${stem}.parquet`, pq);
+}
 
 $("#wb-reset").addEventListener("click", () => {
   workspace.hidden = true;
@@ -513,3 +580,21 @@ $("#sql-editor").addEventListener("keydown", (e) => {
 $("#export-btn").addEventListener("click", exportCSV);
 $("#chart-x").addEventListener("change", drawChart);
 $("#chart-y").addEventListener("change", drawChart);
+
+$("#synth-btn").addEventListener("click", async () => {
+  const btn = $("#synth-btn");
+  const nRows = Number($("#synth-rows").value);
+  const seed = Number($("#synth-seed").value) || 0;
+  const format = $("#synth-format").value;
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Generando…";
+  try {
+    await loadSynthetic(nRows, seed, format);
+  } catch (err) {
+    showError(`No se pudo generar la relación: ${cleanErr(err)}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+});
