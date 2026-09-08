@@ -634,8 +634,9 @@ function drawChart() {
     return;
   }
 
-  // Series categóricas para barras/línea/multi/área
-  const rowsUsed = grid.rows.slice(0, type === "multi" || type === "area" ? 20000 : 60);
+  // Series categóricas para barras/línea/multi/área. Barras se limita para no
+  // volverse ilegible; línea/multi/área admiten miles de puntos (series de tiempo).
+  const rowsUsed = grid.rows.slice(0, type === "barras" ? 60 : 20000);
   const cats = [];
   const catIndex = new Map();
   for (const r of rowsUsed) {
