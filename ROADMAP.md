@@ -110,6 +110,25 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Fix: los ejes del gráfico se elegían por «la primera columna de cada tipo» (`?v=14`)
+
+- Reporte: con un CSV real ancho (nómina) el gráfico agrupaba por `Fecha Ingreso` en
+  vez de `Periodo`, la serie era `RUT` (120 valores), y sumaba `Sueldo Base` en vez de
+  `Líquido a Pagar`. Los presets salían inservibles.
+- Causa: `firstOf` elegía la primera columna numérica / temporal / categórica del
+  esquema, sin mirar nombre ni cardinalidad.
+- **`guessRoles(cols, n)`** nuevo: puntúa cada columna por
+  - **medida:** nombre (`monto|total|valor|sueldo|l[ií]quido|neto|…`), bonus por
+    «final» (`líquido|neto|a pagar|…`), castigo a enteros casi-únicos **solo si el
+    nombre no la declara** como medida, castigo a `id|rut|folio|…`.
+  - **tiempo:** nombre (`periodo|mes|fecha|…`), fuerte bonus a `^periodo$`, preferencia
+    por baja cardinalidad (un periodo se repite; una fecha por fila no).
+  - **dimensión:** cardinalidad en [2, 20] preferida, castigo a `id`/nombre/near-unique.
+- `refreshSchema` ahora trae `approx_count_distinct` por columna (una consulta).
+- Lo usan `chartPresets`, `deriveChartDefaults`, `defaultQuery`, `templateGroups`,
+  `ctePresets`. Los presets con dimensión filtran nulos (`WHERE … IS NOT NULL`) y
+  «comparar dimensiones» corta en `LIMIT 30`.
+
 ### 2026-09-08 — Pulido de accesibilidad y estilo (`?v=13`)
 
 Basado en `docs/referencias-estilo.md` (investigación de cómo Google estiliza su

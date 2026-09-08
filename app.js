@@ -89,6 +89,7 @@ async function initEngine() {
 // ---------------------------------------------------------------- carga de archivos
 const NUMERIC_RE = /(INT|DECIMAL|DOUBLE|FLOAT|REAL|NUMERIC|HUGEINT)/i;
 const TEMPORAL_RE = /(DATE|TIMESTAMP|TIME)/i;
+const INT_RE = /INT/i; // BIGINT, INTEGER, TINYINT… — no matchea DOUBLE/FLOAT/DECIMAL/NUMERIC
 
 function extensionOf(name) {
   const m = name.toLowerCase().match(/\.([a-z0-9]+)$/);
@@ -253,7 +254,17 @@ async function refreshSchema() {
     type: r.column_type,
     numeric: NUMERIC_RE.test(r.column_type),
     temporal: TEMPORAL_RE.test(r.column_type),
+    int: INT_RE.test(r.column_type),
+    distinct: null,
   }));
+  // cardinalidad aproximada por columna, en una consulta — la usan las heurísticas del gráfico
+  try {
+    const sel = state.schema.map((c, i) => `approx_count_distinct(${qid(c.name)}) AS "d${i}"`).join(", ");
+    const [d] = await queryRows(`SELECT ${sel} FROM ${state.table}`);
+    state.schema.forEach((c, i) => (c.distinct = Number(d[`d${i}`] ?? 0)));
+  } catch {
+    /* si falla, las heurísticas caen al orden de columnas */
+  }
 }
 
 function updateFileBar(name, bytes, rows, ext, encNote) {
@@ -265,7 +276,88 @@ function updateFileBar(name, bytes, rows, ext, encNote) {
 }
 
 const qid = (name) => `"${String(name).replace(/"/g, '""')}"`;
-const firstOf = (pred) => state.schema.find(pred)?.name;
+
+// ---------------------------------------------------------------- heurística de roles
+// Elegir "primera columna numérica / temporal / categórica" falla en datos anchos
+// reales (RUT antes que Centro de Costo, Fecha Ingreso antes que Periodo, Sueldo
+// antes que Líquido). guessRoles puntúa cada candidata por nombre + tipo + cardinalidad.
+const RE_MEASURE = /monto|importe|\btotal\b|valor|precio|costo|coste|gasto|ingreso|venta|saldo|haber|neto|bruto|l[ií]quido|sueldo|salario|\bbono\b|remun|\bpago|\bpagar|cantidad|\bqty\b|units?\b|unidades|puntaje|kwh/i;
+const RE_MEASURE_FINAL = /l[ií]quido|\bneto\b|\btotal\b|a pagar|\bpagar\b|final|acumulad/i;
+const RE_TIME = /periodo|per[ií]odo|\bmes\b|month|\bfecha\b|\bdate\b|\bd[ií]a\b|\bday\b|\ba[nñ]o\b|year|trimestre|quarter|semana|week/i;
+const RE_TIME_PERIOD = /^(periodo|per[ií]odo|mes|month|per|ym|yyyymm)$/i;
+const RE_ID = /^(id|rut|run|dni|nif|folio|n[uú]mero|nro|c[oó]digo|cod|sku|ean|isbn|upc|uuid|guid|hash|ticket|orden|factura|boleta|serie)$|(?:_|\b)(id|rut|folio|code|cod|nro|uuid|key)$/i;
+const RE_DIM = /centro|categor|\btipo\b|clase|grupo|segmento|regi[oó]n|zona|[aá]rea\b|depto|departamento|divisi|unidad|estado|status|g[eé]nero|sexo|sucursal|canal|producto|marca|modelo|pa[ií]s|ciudad|comuna|provincia|cargo|puesto|\brol\b|cliente|proveedor|nombre|glosa/i;
+
+// cols: [{ name, numeric, temporal, distinct, int }]. Devuelve { time, measure, dim } (nombres o null).
+function guessRoles(cols, n) {
+  n = Math.max(1, n || 1);
+  const ratio = (c) => (c.distinct != null ? c.distinct / n : 0.5);
+  // solo un ENTERO casi-único parece un identificador; un DOUBLE continuo casi-único
+  // (monto calculado, precio) es una medida legítima aunque tenga alta cardinalidad.
+  const looksLikeId = (c) => c.int && c.distinct != null && c.distinct >= 0.9 * n && n > 20;
+
+  const best = (cands, score) => {
+    let top = null;
+    let topScore = -Infinity;
+    cands.forEach((c, i) => {
+      const s = score(c) - i * 0.01; // desempate: la columna más a la izquierda
+      if (s > topScore) {
+        topScore = s;
+        top = c;
+      }
+    });
+    return top ? top.name : null;
+  };
+
+  const time = best(cols.filter((c) => c.temporal), (c) =>
+    (RE_TIME.test(c.name) ? 2 : 0) +
+    (RE_TIME_PERIOD.test(c.name) ? 3 : 0) +
+    2 * (1 - Math.min(1, ratio(c))) // un periodo se repite mucho; una fecha por fila no
+  );
+
+  const numCands = cols.filter((c) => c.numeric && !c.temporal);
+  const measure = best(numCands, (c) => {
+    const named = RE_MEASURE.test(c.name);
+    let s = 0;
+    if (named) s += 3;
+    if (RE_MEASURE_FINAL.test(c.name)) s += 1.5;
+    if (RE_ID.test(c.name)) s -= 6;
+    // castigar casi-único solo si el nombre NO lo declara como medida: un "Líquido a
+    // Pagar" entero tiene alta cardinalidad naturalmente y sigue siendo una medida
+    if (looksLikeId(c) && !named) s -= 5;
+    if (c.int && c.distinct != null && c.distinct <= 2) s -= 2; // flag binario
+    return s;
+  });
+
+  const dimCands = cols.filter((c) => !c.numeric && !c.temporal && c.name !== time);
+  const dim = best(dimCands, (c) => {
+    const d = c.distinct ?? 999;
+    let s = RE_DIM.test(c.name) ? 1 : 0;
+    if (RE_ID.test(c.name)) s -= 6;
+    if (d >= 2 && d <= 20) s += 3;
+    else if (d <= 50) s += 1;
+    else if (d === 1) s -= 3;
+    if (d >= 0.5 * n && n > 20) s -= 5; // parece un identificador o un nombre
+    return s;
+  });
+
+  return { time, measure: measure || numCands[0]?.name || null, dim };
+}
+
+// Info de columna para guessRoles a partir de un resultado de consulta (no del esquema).
+function gridRoleCols(grid) {
+  const { numeric, temporal } = colKinds(grid);
+  return grid.columns.map((name, i) => {
+    const schemaType = state.schema.find((s) => s.name === name)?.type;
+    return {
+      name,
+      numeric: numeric[i],
+      temporal: temporal[i],
+      int: schemaType ? INT_RE.test(schemaType) : false,
+      distinct: new Set(grid.rows.map((r) => (r[i] instanceof Date ? r[i].getTime() : r[i]))).size,
+    };
+  });
+}
 
 // ---------------------------------------------------------------- consultas
 async function queryRows(sql) {
@@ -451,7 +543,6 @@ async function renderProfile() {
 // Esquema visual: las columnas agrupadas por rol (fecha / medida / dimensión /
 // identificador). "Identificador" = cardinalidad cercana al total de filas, y o bien
 // texto o bien entero — un DOUBLE casi-único es una medida continua, no un ID.
-const INT_RE = /INT/i; // BIGINT, INTEGER, TINYINT… — no matchea DOUBLE/FLOAT/DECIMAL/NUMERIC
 function renderSchemaTree(stats) {
   const host = $("#schema-tree");
   const total = state.rowCount || 1;
@@ -584,9 +675,10 @@ async function renderDimensions() {
 // Progresión exploración → tiempo → avanzado, 3 variaciones cada una.
 function templateGroups() {
   const t = state.table;
-  const dim = firstOf((s) => !s.numeric && !s.temporal) || "*";
-  const num = firstOf((s) => s.numeric) || "1";
-  const ts = firstOf((s) => s.temporal);
+  const roles = guessRoles(state.schema, state.rowCount);
+  const dim = roles.dim || "*";
+  const num = roles.measure || "1";
+  const ts = roles.time;
   const per = ts ? `date_trunc('month', ${qid(ts)})` : `'sin_fecha'`;
 
   return [
@@ -664,9 +756,9 @@ function buildTemplates() {
 }
 
 function defaultQuery() {
-  const num = firstOf((s) => s.numeric);
-  const ts = firstOf((s) => s.temporal);
-  if (ts && num) return `SELECT date_trunc('month', ${qid(ts)}) AS mes, sum(${qid(num)}) AS total\nFROM ${state.table}\nGROUP BY mes\nORDER BY mes;`;
+  const { time: ts, measure: num } = guessRoles(state.schema, state.rowCount);
+  if (ts && num)
+    return `SELECT date_trunc('month', ${qid(ts)}) AS mes, sum(${qid(num)}) AS total\nFROM ${state.table}\nWHERE ${qid(ts)} IS NOT NULL\nGROUP BY mes\nORDER BY mes;`;
   return `SELECT * FROM ${state.table} LIMIT 100;`;
 }
 
@@ -676,9 +768,10 @@ const cteState = [];
 // Tres cadenas de ejemplo, parametrizadas al esquema cargado.
 function ctePresets() {
   const t = state.table;
-  const dim = firstOf((s) => !s.numeric && !s.temporal) || "dim";
-  const num = firstOf((s) => s.numeric) || "valor";
-  const ts = firstOf((s) => s.temporal);
+  const roles = guessRoles(state.schema, state.rowCount);
+  const dim = roles.dim || "dim";
+  const num = roles.measure || "valor";
+  const ts = roles.time;
   const per = ts ? `date_trunc('month', ${qid(ts)})` : null;
   return [
     {
@@ -910,29 +1003,44 @@ function syncChartControls() {
   drawChart();
 }
 
-// Elige X / Y / serie según el tipo de gráfico y los tipos de columna del resultado.
+// Elige X / Y / serie según el tipo de gráfico y las columnas del resultado.
+// Usa guessRoles (nombre + cardinalidad), no "la primera de cada tipo".
 function deriveChartDefaults() {
   const grid = state.lastResult;
   if (!grid) return;
   const type = $("#chart-type").value;
   const { numeric, temporal } = colKinds(grid);
-  let xi, yi;
+  const roles = guessRoles(gridRoleCols(grid), grid.rows.length);
+  const idx = (name) => (name == null ? -1 : grid.columns.indexOf(name));
+
+  let xi, yi, si;
   if (type === "scatter") {
     xi = numeric.findIndex(Boolean);
-    yi = numeric.findIndex((n, i) => n && i !== xi);
+    yi = numeric.findIndex((v, i) => v && i !== xi);
+    si = -1;
   } else {
-    xi = temporal.findIndex(Boolean);
-    if (xi < 0) xi = numeric.findIndex((n) => !n);
-    yi = numeric.findIndex((n) => n);
+    xi = idx(roles.time);
+    if (xi < 0) xi = temporal.findIndex(Boolean);
+    if (xi < 0) xi = idx(roles.dim); // sin fecha: X categórica
+    if (xi < 0) xi = numeric.findIndex((v) => !v);
+    if (xi < 0) xi = 0;
+
+    yi = idx(roles.measure);
+    if (yi < 0 || yi === xi) yi = numeric.findIndex((v, i) => v && i !== xi);
+    if (yi < 0) yi = numeric.findIndex(Boolean);
+    if (yi < 0) yi = Math.min(1, grid.columns.length - 1);
+
+    si = idx(roles.dim);
+    if (si === xi || si === yi) si = -1;
   }
-  $("#chart-x").value = String(xi >= 0 ? xi : 0);
-  $("#chart-y").value = String(yi >= 0 ? yi : Math.min(1, grid.columns.length - 1));
-  // multi/area la exigen; barras/scatter la aceptan como opcional y la pre-seleccionan
-  // si hay una categórica libre. línea es serie única y la ignora.
+
+  $("#chart-x").value = String(xi);
+  $("#chart-y").value = String(yi);
+  // multi/area la exigen; barras/scatter la aceptan opcional; línea la ignora.
   if (type === "linea") {
     $("#chart-series").value = "-1";
   } else {
-    const si = grid.columns.findIndex((c, i) => !numeric[i] && !temporal[i] && i !== xi && i !== yi);
+    if (si < 0) si = grid.columns.findIndex((c, i) => !numeric[i] && !temporal[i] && i !== xi && i !== yi);
     $("#chart-series").value = si >= 0 ? String(si) : "-1";
   }
 }
@@ -954,29 +1062,27 @@ function setChartNote(msg) {
 // ---------------------------------------------------------------- presets de gráfico
 function chartPresets() {
   const t = state.table;
-  const dim = firstOf((s) => !s.numeric && !s.temporal);
-  const num = firstOf((s) => s.numeric) || "1";
-  const ts = firstOf((s) => s.temporal);
+  const { time: ts, measure: num0, dim } = guessRoles(state.schema, state.rowCount);
+  const num = num0 || "1";
   const per = ts ? `date_trunc('month', ${qid(ts)})` : null;
   const out = [];
   if (ts)
     out.push({
       n: "serie de tiempo",
       type: "linea",
-      sql: `SELECT ${per} AS mes, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1 ORDER BY 1;`,
+      sql: `SELECT ${per} AS mes, sum(${qid(num)}) AS total\nFROM ${t}\nWHERE ${qid(ts)} IS NOT NULL\nGROUP BY 1 ORDER BY 1;`,
     });
   if (ts && dim)
     out.push({
       n: "composición en el tiempo",
       type: "area",
-      // el 2º campo conserva su nombre sin alias — `AS ${dim}` rompía con nombres con espacios
-      sql: `SELECT ${per} AS mes, ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1, 2 ORDER BY 1;`,
+      sql: `SELECT ${per} AS mes, ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nWHERE ${qid(dim)} IS NOT NULL AND ${qid(ts)} IS NOT NULL\nGROUP BY 1, 2 ORDER BY 1;`,
     });
   if (dim)
     out.push({
       n: "comparar dimensiones",
       type: "barras",
-      sql: `SELECT ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1 ORDER BY total DESC;`,
+      sql: `SELECT ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nWHERE ${qid(dim)} IS NOT NULL\nGROUP BY 1 ORDER BY total DESC\nLIMIT 30;`,
     });
   const nums = state.schema.filter((s) => s.numeric);
   if (nums.length >= 2 && out.length < 3)
