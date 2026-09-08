@@ -16,10 +16,12 @@
   inferencia de esquema sobre el archivo completo (`read_csv_auto`, `SAMPLE_SIZE=-1`).
   El CSV se normaliza a UTF-8 antes de leerlo (respeta el BOM; cae a Windows-1252 si no
   es UTF-8 válido) — las planillas exportadas en Latin-1 o «Unicode text» cargan igual.
-- **Perfilado enriquecido en una pasada.** Por columna: tipo, nulos, ceros,
-  cardinalidad, cuantiles (p05 / mediana / p95), media y desviación — cada métrica
-  con su definición al pasar el cursor — más un desglose de frecuencias de las
-  columnas categóricas y una **matriz de correlación** (Pearson) entre las numéricas.
+- **Perfilado enriquecido en una pasada.** Un **esquema** que agrupa las columnas
+  por rol (fecha / medida / dimensión / identificador); por columna: tipo, nulos,
+  ceros, cardinalidad, cuantiles (p05 / mediana / p95), media y desviación — cada
+  métrica con su definición al pasar el cursor — más un desglose de frecuencias de
+  las columnas categóricas y una **matriz de correlación** (Pearson) entre las
+  numéricas.
 - **Editor SQL** en dialecto DuckDB contra la relación `datos`, con **plantillas**
   (exploración → tiempo → avanzado, 3 variaciones cada una), proyección del resultado
   a CSV, e **historial** (últimas 15 consultas, recuperables) — la última consulta y
@@ -102,8 +104,9 @@ archivo de datos del usuario nunca se transmite, con o sin fuentes.
 
 In-client OLAP for exploratory inspection of tabular data: SQL over CSV and Parquet,
 no backend, no ingestion, the file never leaves the browser. DuckDB-WASM on a Web
-Worker; one-pass enriched profiling (quantiles, nulls, zeros, per-dimension
-frequencies, a Pearson correlation matrix); DuckDB-dialect SQL editor with a template
+Worker; one-pass enriched profiling (a schema view grouping columns by role, plus
+quantiles, nulls, zeros, per-dimension frequencies, a Pearson correlation matrix);
+DuckDB-dialect SQL editor with a template
 library, a query history and last-query/chart-preference recall (`localStorage`); a
 CTE assistant that composes `WITH` chains; SVG charts (bar, line, multi-series,
 stacked area, scatter) with drag-to-zoom on the X axis, toggleable data labels,

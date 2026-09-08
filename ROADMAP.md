@@ -112,6 +112,16 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Esquema visual + enlaces al glosario (`?v=9`)
+
+- Las siglas del subtítulo (SQL / CSV / Parquet) ahora enlazan al glosario
+  (`glosario.html#sql|#csv|#parquet`) — antes eran solo `<abbr title>` sin destino.
+- Panel **«Esquema»** al inicio del Perfilado (`renderSchemaTree`): agrupa las
+  columnas por rol — Fechas (`temporal`), Medidas, Dimensiones, Identificadores
+  (cardinalidad ≥ `max(50, 0.9·filas)` y texto o entero — un DOUBLE casi-único
+  sigue siendo medida). Chips con `tipo · N dist.`, clic para copiar el nombre.
+  La tabla grande pasó a «Detalle por columna».
+
 ### 2026-09-08 — Fix: CSV no-UTF-8 (`?v=8`)
 
 - Reporte: un CSV real fallaba con «Invalid unicode (byte sequence mismatch)» —

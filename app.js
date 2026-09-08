@@ -319,6 +319,7 @@ async function renderProfile() {
             round(avg::DOUBLE, 2) AS avg, round(std::DOUBLE, 2) AS std
      FROM (SUMMARIZE ${state.table})`
   );
+  renderSchemaTree(stats);
 
   // Nulos, ceros, percentiles y moda por columna, en una sola consulta.
   const parts = [`${total} AS __total`];
@@ -368,6 +369,53 @@ async function renderProfile() {
 
   await renderDimensions();
   await renderCorrelation();
+}
+
+// Esquema visual: las columnas agrupadas por rol (fecha / medida / dimensión /
+// identificador). "Identificador" = cardinalidad cercana al total de filas, y o bien
+// texto o bien entero — un DOUBLE casi-único es una medida continua, no un ID.
+const INT_RE = /INT/i; // BIGINT, INTEGER, TINYINT… — no matchea DOUBLE/FLOAT/DECIMAL/NUMERIC
+function renderSchemaTree(stats) {
+  const host = $("#schema-tree");
+  const total = state.rowCount || 1;
+  const card = new Map(stats.map((r) => [r.column_name, Number(r.approx_unique)]));
+  const isId = (s) => {
+    if (s.temporal || (card.get(s.name) ?? 0) < Math.max(50, 0.9 * total)) return false;
+    return !s.numeric || INT_RE.test(s.type);
+  };
+
+  const groups = [
+    { kind: "temporal", label: "Fechas", cols: state.schema.filter((s) => s.temporal) },
+    { kind: "medida", label: "Medidas", cols: state.schema.filter((s) => s.numeric && !s.temporal && !isId(s)) },
+    { kind: "dimension", label: "Dimensiones", cols: state.schema.filter((s) => !s.numeric && !s.temporal && !isId(s)) },
+    { kind: "id", label: "Identificadores", cols: state.schema.filter((s) => isId(s)) },
+  ];
+
+  host.innerHTML = groups
+    .filter((g) => g.cols.length)
+    .map((g) => {
+      const chips = g.cols
+        .map((c) => {
+          const n = card.get(c.name);
+          const meta = `${c.type.toLowerCase()}${n != null ? ` · ${Number(n).toLocaleString("es-CL")} dist.` : ""}`;
+          return `<button type="button" class="sc-chip" data-col="${escapeHtml(c.name)}" title="clic para copiar el nombre">${escapeHtml(c.name)}<em>${escapeHtml(meta)}</em></button>`;
+        })
+        .join("");
+      return `<div class="sc-group" data-kind="${g.kind}"><span class="sc-label">${g.label} <span class="sc-count">${g.cols.length}</span></span><div class="sc-chips">${chips}</div></div>`;
+    })
+    .join("");
+
+  host.querySelectorAll(".sc-chip").forEach((btn) =>
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.col);
+        btn.classList.add("copied");
+        setTimeout(() => btn.classList.remove("copied"), 900);
+      } catch {
+        /* portapapeles bloqueado */
+      }
+    })
+  );
 }
 
 // Matriz de correlación de Pearson entre columnas numéricas (hasta 8), una sola consulta.

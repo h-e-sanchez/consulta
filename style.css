@@ -332,6 +332,58 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .tpl-group button:hover { color: var(--text); border-color: var(--accent); }
 
+/* ---- esquema (árbol de columnas) ---- */
+.schema-tree {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.4rem;
+}
+.sc-group {
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-strong);
+  background: var(--surface);
+  padding: 0.55rem 0.7rem;
+}
+.sc-group[data-kind="temporal"] { border-left-color: #6c8ea4; }
+.sc-group[data-kind="medida"] { border-left-color: var(--accent); }
+.sc-group[data-kind="dimension"] { border-left-color: #7d9a6f; }
+.sc-group[data-kind="id"] { border-left-color: var(--faint); }
+.sc-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.sc-count { color: var(--faint); }
+.sc-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.sc-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  line-height: 1.3;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.sc-chip em { font-style: normal; font-size: 0.62rem; color: var(--faint); }
+.sc-chip:hover { border-color: var(--accent); }
+.sc-chip.copied { border-color: var(--accent); color: var(--accent); }
+.sc-chip.copied em { color: var(--accent); }
+
+/* enlaces de sigla en el subtítulo → glosario */
+.tagline a { color: inherit; }
+.tagline a abbr { color: var(--accent); }
+
 /* ---- desglose por dimensión ---- */
 .dim-grid {
   display: grid;
