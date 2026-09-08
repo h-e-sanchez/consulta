@@ -73,7 +73,7 @@ PIVOT (SELECT date_trunc('month', periodo) AS mes, segmento, valor FROM datos)
 ON segmento USING sum(valor) ORDER BY mes;
 ```
 
-Despliegue estático (GitHub Pages), sin paso de build.
+Despliegue estático (GitHub Pages), sin paso de build. Backlog en [`ROADMAP.md`](ROADMAP.md).
 
 ## Límite conocido
 
