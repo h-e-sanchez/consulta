@@ -1,8 +1,16 @@
-# vendor/duckdb — runtime de DuckDB-WASM auto-alojado
+# vendor/ — dependencias de terceros auto-alojadas
 
-`consulta` sirve el runtime de DuckDB desde acá en vez de un CDN, así que el sitio
-corre sin ningún tráfico saliente, incluso en el primer arranque. `app.js` cae a
-jsDelivr solo si algo de esto no carga.
+Todo lo que `consulta` necesita en runtime vive acá, no en un CDN: el sitio corre
+sin tráfico saliente, incluso en el primer arranque.
+
+- **`duckdb/`** — el runtime de DuckDB-WASM (motor SQL).
+- **`sheetjs/`** — SheetJS, para leer libros de Excel / ODS.
+
+---
+
+## vendor/duckdb — runtime de DuckDB-WASM
+
+`app.js` cae a jsDelivr solo si algo de esto no carga.
 
 ## Contenido
 
@@ -42,3 +50,29 @@ cp node_modules/@duckdb/duckdb-wasm/dist/{duckdb-mvp.wasm,duckdb-eh.wasm,duckdb-
 Si cambia la versión de `apache-arrow` que DuckDB pide, sale sola en el paso 2
 (es dependencia transitiva). Si `dist/` reorganiza nombres de archivo, ajustar
 `LOCAL_BUNDLES` en `app.js`.
+
+---
+
+## vendor/sheetjs — lectura de Excel / ODS
+
+| archivo | origen | qué es |
+|---|---|---|
+| `xlsx.esm.js` | `https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs` | SheetJS Community Edition (MIT), build ESM auto-contenido; expone `read()` y `utils.sheet_to_csv()` |
+
+`app.js` lo importa **de forma diferida** (`import()` dinámico) solo al abrir una
+planilla — el usuario de CSV/Parquet no descarga los ~985 KB. Al elegir una hoja se
+convierte a CSV con `utils.sheet_to_csv` y se pasa por el mismo camino de ingesta
+que un CSV normal.
+
+**Por qué el CDN de SheetJS y no npm:** la CE mantenida se distribuye por
+`cdn.sheetjs.com`; el paquete `xlsx` de npm está congelado en `0.18.5`, que arrastra
+CVE-2023-30533 (prototype pollution) y CVE-2024-22363 (ReDoS). **Por qué `.esm.js` y
+no `.mjs`:** `python -m http.server` sirve `.mjs` como `text/plain` y el navegador
+lo rechaza como módulo.
+
+### Regenerar (al actualizar SheetJS)
+
+```bash
+curl -o vendor/sheetjs/xlsx.esm.js https://cdn.sheetjs.com/xlsx-<versión>/package/xlsx.mjs
+node --check vendor/sheetjs/xlsx.esm.js   # el .mjs debe ser ESM auto-contenido (sin imports externos)
+```

@@ -1,2 +1,4 @@
 # Artefactos de terceros vendorizados: sin conversión de fin de línea ni diff.
+# (el vendor/README.md queda como texto normal)
 vendor/duckdb/** binary
+vendor/sheetjs/** binary

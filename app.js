@@ -19,6 +19,9 @@ const state = {
   schema: [],          // [{ name, type, numeric, temporal }]
   rowCount: 0,
   lastResult: null,    // { columns, rows } del último SELECT
+  workbook: null,      // libro de Excel cargado (para cambiar de hoja sin re-parsear)
+  workbookName: "",
+  workbookSize: 0,
 };
 
 // ---------------------------------------------------------------- referencias DOM
@@ -112,11 +115,14 @@ function normalizeTextBytes(buffer) {
   }
 }
 
+const SHEET_EXTS = ["xlsx", "xls", "ods"];
+const FILE_EXTS = ["csv", "tsv", "parquet", ...SHEET_EXTS];
+
 async function loadBuffer(name, buffer) {
   fileError.hidden = true;
   const ext = extensionOf(name);
-  if (!["csv", "tsv", "parquet"].includes(ext)) {
-    showError(`Extensión no soportada: .${ext}. Usa .csv, .tsv o .parquet.`);
+  if (!FILE_EXTS.includes(ext)) {
+    showError(`Extensión no soportada: .${ext}. Usa .csv, .tsv, .parquet o .xlsx.`);
     return;
   }
 
@@ -127,31 +133,42 @@ async function loadBuffer(name, buffer) {
     return;
   }
 
+  if (SHEET_EXTS.includes(ext)) {
+    await loadWorkbook(name, buffer);
+    return;
+  }
+
+  // CSV / TSV / Parquet
   const virtualName = `input.${ext}`;
-  const sizeBytes = buffer.byteLength; // registerFileBuffer transfiere el buffer al worker y lo detacha
+  const sizeBytes = buffer.byteLength; // registerFileBuffer detacha el buffer
+  let regBytes = new Uint8Array(buffer);
   let encNote = null;
+  if (ext !== "parquet") {
+    const norm = normalizeTextBytes(buffer);
+    regBytes = norm.bytes;
+    encNote = norm.encoding;
+  }
+  const reader =
+    ext === "parquet"
+      ? `read_parquet('${virtualName}')`
+      : `read_csv_auto('${virtualName}', SAMPLE_SIZE=-1)`;
   try {
-    let regBytes = new Uint8Array(buffer);
-    if (ext !== "parquet") {
-      const norm = normalizeTextBytes(buffer);
-      regBytes = norm.bytes;
-      encNote = norm.encoding;
-    }
     await state.db.registerFileBuffer(virtualName, regBytes);
-    const reader =
-      ext === "parquet"
-        ? `read_parquet('${virtualName}')`
-        : `read_csv_auto('${virtualName}', SAMPLE_SIZE=-1)`;
     await state.conn.query(`CREATE OR REPLACE TABLE ${state.table} AS SELECT * FROM ${reader}`);
   } catch (err) {
     showError(`No se pudo leer el archivo: ${cleanErr(err)}`);
     return;
   }
+  await finishIngest(name, sizeBytes, ext, encNote);
+}
 
+// Tail común a todo camino de carga: recuenta filas, refresca el esquema y pinta
+// todos los paneles del workspace.
+async function finishIngest(displayName, sizeBytes, ext, encNote) {
   await refreshSchema();
   const [{ n }] = await queryRows(`SELECT count(*)::BIGINT AS n FROM ${state.table}`);
   state.rowCount = Number(n);
-  updateFileBar(name, sizeBytes, state.rowCount, ext, encNote);
+  updateFileBar(displayName, sizeBytes, state.rowCount, ext, encNote);
 
   await renderPreview();
   await renderProfile();
@@ -165,8 +182,64 @@ async function loadBuffer(name, buffer) {
   // Restaura la última consulta ejecutada (puede referirse a otras columnas: no se auto-ejecuta).
   $("#sql-editor").value = LS.get("last-sql") || defaultQuery();
   selectTab("tab-preview");
+  const wasHidden = workspace.hidden;
   workspace.hidden = false;
-  workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (wasHidden) workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ---------------------------------------------------------------- Excel / ODS
+// SheetJS se carga de forma diferida (import dinámico): el usuario de CSV/Parquet
+// no descarga ~985 KB. El libro queda en state para cambiar de hoja sin re-parsear.
+let sheetjs = null;
+
+async function loadWorkbook(name, buffer) {
+  try {
+    sheetjs ??= await import("./vendor/sheetjs/xlsx.esm.js");
+  } catch {
+    showError("No se pudo cargar el lector de Excel (vendor/sheetjs).");
+    return;
+  }
+  let wb;
+  try {
+    wb = sheetjs.read(new Uint8Array(buffer), { type: "array", cellDates: true });
+  } catch (err) {
+    showError(`No se pudo leer el libro: ${cleanErr(err)}`);
+    return;
+  }
+  if (!wb.SheetNames.length) {
+    showError("El libro no tiene hojas.");
+    return;
+  }
+  state.workbook = wb;
+  state.workbookName = name;
+  state.workbookSize = buffer.byteLength;
+
+  const picker = $("#sheet-picker");
+  picker.innerHTML = "";
+  wb.SheetNames.forEach((s) => picker.add(new Option(s, s)));
+  $("#sheet-pick-wrap").hidden = wb.SheetNames.length < 2;
+
+  await selectSheet(wb.SheetNames[0]);
+}
+
+async function selectSheet(sheetName) {
+  const ws = state.workbook?.Sheets[sheetName];
+  if (!ws) return;
+  $("#sheet-picker").value = sheetName;
+  const bytes = new TextEncoder().encode(
+    sheetjs.utils.sheet_to_csv(ws, { FS: ",", blankrows: false })
+  );
+  const size = bytes.byteLength;
+  try {
+    await state.db.registerFileBuffer("input.csv", bytes);
+    await state.conn.query(
+      `CREATE OR REPLACE TABLE ${state.table} AS SELECT * FROM read_csv_auto('input.csv', SAMPLE_SIZE=-1)`
+    );
+  } catch (err) {
+    showError(`No se pudo leer la hoja «${sheetName}»: ${cleanErr(err)}`);
+    return;
+  }
+  await finishIngest(`${state.workbookName} — ${sheetName}`, state.workbookSize || size, "xlsx");
 }
 
 async function refreshSchema() {
@@ -380,7 +453,7 @@ function renderSchemaTree(stats) {
   const total = state.rowCount || 1;
   const card = new Map(stats.map((r) => [r.column_name, Number(r.approx_unique)]));
   const isId = (s) => {
-    if (s.temporal || (card.get(s.name) ?? 0) < Math.max(50, 0.9 * total)) return false;
+    if (s.temporal || (card.get(s.name) ?? 0) < Math.max(20, 0.9 * total)) return false;
     return !s.numeric || INT_RE.test(s.type);
   };
 
@@ -1468,9 +1541,13 @@ dropZone.addEventListener("drop", async (e) => {
 $("#wb-reset").addEventListener("click", () => {
   workspace.hidden = true;
   fileInput.value = "";
+  state.workbook = null;
+  state.workbookName = "";
+  $("#sheet-pick-wrap").hidden = true;
   dropZone.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 $("#copy-cols").addEventListener("click", (e) => copyText(state.schema.map((s) => s.name).join(", "), e.currentTarget));
+$("#sheet-picker").addEventListener("change", (e) => selectSheet(e.target.value));
 
 TABS.forEach((t) => document.getElementById(t).addEventListener("click", () => selectTab(t)));
 

@@ -16,6 +16,10 @@
   inferencia de esquema sobre el archivo completo (`read_csv_auto`, `SAMPLE_SIZE=-1`).
   El CSV se normaliza a UTF-8 antes de leerlo (respeta el BOM; cae a Windows-1252 si no
   es UTF-8 válido) — las planillas exportadas en Latin-1 o «Unicode text» cargan igual.
+- **Excel y ODS.** Un `.xlsx` / `.xls` / `.ods` se lee en el navegador (SheetJS
+  vendorizado, cargado bajo demanda); si tiene varias hojas, un selector deja elegir
+  cuál importar y cambiar entre ellas sin volver a abrir el archivo. La hoja elegida
+  se convierte a tabla y pasa por el mismo camino que un CSV.
 - **Perfilado enriquecido en una pasada.** Un **esquema** que agrupa las columnas
   por rol (fecha / medida / dimensión / identificador); por columna: tipo, nulos,
   ceros, cardinalidad, cuantiles (p05 / mediana / p95), media y desviación — cada
@@ -38,9 +42,9 @@
   encabezados para armar un `SELECT`.
 - **Glosario.** `glosario.html` define en lenguaje llano cada término (CSV, Parquet,
   CTE, cuantil, WASM…). Nada hace falta saberlo de antemano.
-- **Sin tooling.** HTML + módulos ES + CSS, sin paso de build. El runtime de DuckDB
-  (bundle ESM + `.wasm` + workers) está auto-alojado en `vendor/duckdb/`; solo
-  regenerarlo al subir de versión necesita Node (ver `vendor/README.md`).
+- **Sin tooling.** HTML + módulos ES + CSS, sin paso de build. Las dependencias de
+  runtime (DuckDB-WASM y SheetJS) están auto-alojadas en `vendor/`; solo regenerarlas
+  al subir de versión necesita Node (ver `vendor/README.md`).
 
 ## Uso
 
@@ -87,12 +91,13 @@ Despliegue estático (GitHub Pages), sin paso de build. Backlog en [`ROADMAP.md`
 
 ## Operación aislada
 
-El runtime de DuckDB-WASM (`@duckdb/duckdb-wasm@1.29.0` + `apache-arrow@17.0.0`) va
-auto-alojado en `vendor/duckdb/`: el **motor** no hace ninguna petición a un CDN, ni
-siquiera en el primer arranque. `app.js` apunta `selectBundle()` a los bundles
-locales y solo cae a `getJsDelivrBundles()` si el runtime local no carga (deploy en
-un subpath inesperado, archivo ausente). Regeneración documentada en
-[`vendor/README.md`](vendor/README.md).
+El runtime de DuckDB-WASM (`@duckdb/duckdb-wasm@1.29.0` + `apache-arrow@17.0.0`) y el
+lector de Excel (`SheetJS 0.20.3`) van auto-alojados en `vendor/`: el **motor** no
+hace ninguna petición a un CDN, ni siquiera en el primer arranque. `app.js` apunta
+`selectBundle()` a los bundles locales de DuckDB y solo cae a `getJsDelivrBundles()`
+si el runtime local no carga (deploy en un subpath inesperado, archivo ausente);
+SheetJS se importa (dinámico) desde `vendor/sheetjs/` solo al abrir una planilla.
+Regeneración documentada en [`vendor/README.md`](vendor/README.md).
 
 Único fetch externo que queda: las tipografías IBM Plex desde Google Fonts (en el
 `<head>`, no bloqueante — sin red cae al stack monoespaciado/sans del sistema). El
@@ -103,10 +108,11 @@ archivo de datos del usuario nunca se transmite, con o sin fuentes.
 ## English
 
 In-client OLAP for exploratory inspection of tabular data: SQL over CSV and Parquet,
-no backend, no ingestion, the file never leaves the browser. DuckDB-WASM on a Web
-Worker; one-pass enriched profiling (a schema view grouping columns by role, plus
-quantiles, nulls, zeros, per-dimension frequencies, a Pearson correlation matrix);
-DuckDB-dialect SQL editor with a template
+no backend, no ingestion, the file never leaves the browser. Reads CSV, Parquet and
+Excel / ODS (multi-sheet workbooks get a sheet picker; SheetJS is vendored and loaded
+on demand). DuckDB-WASM on a Web Worker; one-pass enriched profiling (a schema view
+grouping columns by role, plus quantiles, nulls, zeros, per-dimension frequencies, a
+Pearson correlation matrix); DuckDB-dialect SQL editor with a template
 library, a query history and last-query/chart-preference recall (`localStorage`); a
 CTE assistant that composes `WITH` chains; SVG charts (bar, line, multi-series,
 stacked area, scatter) with drag-to-zoom on the X axis, toggleable data labels,

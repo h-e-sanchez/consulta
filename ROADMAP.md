@@ -83,11 +83,9 @@ cada sesión.
 
 ## Backlog P2 — alcance
 
-- [ ] **Excel (.xlsx).** Cargar un libro, listar las hojas y elegir cuál importar.
-      DuckDB 1.1.1 (el que trae duckdb-wasm 1.29.0) no tiene `read_xlsx`; opciones:
-      (a) vendorizar **SheetJS** (~900 KB, client-side, parsea hojas → CSV → pasa por
-      `loadBuffer`), (b) vendorizar la extensión `spatial` (~4 MB, `st_read` vía GDAL,
-      frágil), (c) subir duckdb-wasm a un build con DuckDB ≥ 1.2. Recomendado: (a).
+- [x] **Excel (.xlsx / .xls / .ods).** — hecho 2026-09-08 (`?v=10`). SheetJS 0.20.3
+      vendorizado en `vendor/sheetjs/`, import dinámico, `sheet_to_csv` → mismo camino
+      que un CSV. Selector de hoja para libros multi-hoja.
 - [ ] **Múltiples relaciones.** Cargar más de un archivo y permitir `JOIN`.
 - [ ] **Exportar el resultado a Parquet** (además de CSV).
 - [ ] **Compartir por URL.** Serializar solo el SQL en el hash — nunca los datos.
@@ -111,6 +109,19 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-08 — Excel / ODS por hojas (`?v=10`)
+
+- **SheetJS 0.20.3** vendorizado en `vendor/sheetjs/xlsx.esm.js` (del CDN propio de
+  SheetJS, no del `xlsx@0.18.5` de npm con CVEs). Import **dinámico** — los ~985 KB
+  solo cargan al abrir una planilla.
+- `loadBuffer` ramifica por extensión: `xlsx`/`xls`/`ods` → `loadWorkbook` →
+  `sheetjs.read` → `selectSheet` convierte la hoja a CSV con `utils.sheet_to_csv` y
+  la pasa por el tramo común nuevo **`finishIngest`** (mismo camino que un CSV).
+- Selector `#sheet-picker` en la barra de archivo, visible solo con ≥2 hojas; el
+  libro queda en `state.workbook` para cambiar de hoja sin re-parsear. «Cargar otro»
+  lo limpia.
+- `.gitattributes` ampliado a `vendor/** binary`.
 
 ### 2026-09-08 — Esquema visual + enlaces al glosario (`?v=9`)
 

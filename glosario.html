@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
   <header class="site-header">
@@ -30,6 +30,12 @@
         <dd>Un formato de archivo <strong>columnar</strong> y comprimido, estándar en analítica.
           Guarda cada columna junta (no cada fila), así que leer «solo tres columnas de un archivo
           enorme» es rápido y barato. Trae los tipos de dato incorporados.</dd>
+
+        <dt id="excel">Excel / XLSX · hoja de cálculo</dt>
+        <dd>Un libro de Excel (<code>.xlsx</code>) u ODS (<code>.ods</code>) puede tener varias
+          <strong>hojas</strong>. <code>consulta</code> lee el libro en el navegador, te deja elegir
+          qué hoja importar, y la convierte a una tabla. Cambiar de hoja no vuelve a pedir el
+          archivo. La primera fila de la hoja se toma como los nombres de columna.</dd>
 
         <dt id="relacion">relación / tabla</dt>
         <dd>El conjunto de filas y columnas cargado. En <code>consulta</code> siempre se llama

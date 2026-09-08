@@ -8,24 +8,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
   <header class="site-header">
     <h1>consulta</h1>
     <p class="tagline">Explora una tabla de datos con consultas <a href="glosario.html#sql"><abbr title="Structured Query Language: el lenguaje estándar para consultar datos">SQL</abbr></a>,
-      dentro del navegador. Acepta archivos <a href="glosario.html#csv"><abbr title="valores separados por comas: una tabla en texto plano">CSV</abbr></a>
-      y <a href="glosario.html#parquet"><abbr title="formato de archivo columnar comprimido, habitual en analítica de datos">Parquet</abbr></a>;
+      dentro del navegador. Acepta <a href="glosario.html#csv"><abbr title="valores separados por comas: una tabla en texto plano">CSV</abbr></a>,
+      <a href="glosario.html#parquet"><abbr title="formato de archivo columnar comprimido, habitual en analítica de datos">Parquet</abbr></a>
+      y <a href="glosario.html#excel"><abbr title="libros de Excel (.xlsx) y hojas de cálculo abiertas (.ods)">Excel</abbr></a>;
       el archivo no se sube a ningún servidor.</p>
     <p class="tagline-sub">¿Términos nuevos? <a href="glosario.html">Glosario</a>.</p>
   </header>
 
   <main>
     <section id="drop-zone" class="drop-zone">
-      <p>Arrastra un archivo <strong>.csv</strong> o <strong>.parquet</strong> aquí, o</p>
+      <p>Arrastra un archivo <strong>.csv</strong>, <strong>.parquet</strong> o <strong>.xlsx</strong> aquí, o</p>
       <label class="file-button">
         Elegir archivo
-        <input type="file" id="file-input" accept=".csv,.tsv,.parquet,text/csv">
+        <input type="file" id="file-input" accept=".csv,.tsv,.parquet,.xlsx,.xls,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet">
       </label>
       <div class="synth">
         <span class="synth-label">o genera una relación sintética</span>
@@ -69,6 +70,9 @@
       <div class="file-bar">
         <span class="fname" id="wb-name">—</span>
         <span class="fmeta" id="wb-meta"></span>
+        <label id="sheet-pick-wrap" hidden>hoja
+          <select id="sheet-picker" aria-label="hoja del libro"></select>
+        </label>
         <button type="button" class="ghost" id="copy-cols">copiar columnas</button>
         <button type="button" class="ghost" id="wb-reset">Cargar otro</button>
       </div>
@@ -209,6 +213,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=9"></script>
+  <script type="module" src="app.js?v=10"></script>
 </body>
 </html>
