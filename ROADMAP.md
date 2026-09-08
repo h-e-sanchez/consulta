@@ -110,6 +110,26 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Pulido de accesibilidad y estilo (`?v=13`)
+
+Basado en `docs/referencias-estilo.md` (investigación de cómo Google estiliza su
+documentación). Cambios de bajo riesgo, sin tocar la identidad «Grafito»:
+
+- **Contraste de enlaces (defecto AA):** el ámbar `#a9661a` sobre `--bg` daba ~4.2:1
+  (bajo el mínimo). Oscurecido a `#8f5615` → ≥5:1 en todas las superficies claras.
+  Los enlaces del cuerpo pasan a color de texto + subrayado tenue (siempre legible),
+  ámbar al `:hover`; los del pie a `--muted`. El ámbar queda para acentos deliberados
+  (botones, pestaña activa, `dt` del glosario, siglas del subtítulo).
+- **Foco de teclado:** ring unificado `outline: 2px solid var(--accent); offset 2px`
+  vía token `--focus`, aplicado también a `a`, `summary` y `.file-button:focus-within`.
+- **«Elegir archivo» accesible:** el `<input type=file>` estaba en `display:none`
+  (no enfocable por Tab). Ahora va oculto a la vista pero enfocable.
+- **Callouts:** componente `.callout` / `.callout--warn` / `.callout--danger`
+  (border-left + fondo tenue con `color-mix` + label mono). El `#file-error` pasa a
+  callout de peligro; nota introductoria en `glosario.html`.
+- **Tokens** `--fs-*` (escala ~1.2) y `--sp-*` (ritmo 4px) en `:root`, aplicados a
+  encabezados y callouts. `.panel .hint` y el texto del glosario acotados a ~46–68ch.
+
 ### 2026-09-08 — Fix: los presets de gráfico rompían con nombres de columna con espacios (`?v=12`)
 
 - Reporte: al hacer clic en un preset, el gráfico se rompía.
