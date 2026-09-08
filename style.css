@@ -1,17 +1,20 @@
-/* consulta — estilo "Grafito": títulos monoespaciados, cuerpo sans, paleta grafito,
-   todo plano, un acento ámbar. Se lee como una ficha técnica. */
+/* consulta — estilo "Grafito": títulos monoespaciados, cuerpo sans, neutrales fríos
+   alineados a la spec de documentación de Google (fondo casi blanco, gris secundario
+   #5f6368, divisores de 1px, sin sombras), todo plano, un acento teal. Se lee como
+   una ficha técnica. */
 
 :root {
-  --bg: #f4f4f3;
+  --bg: #f7f8f8;
   --surface: #ffffff;
-  --surface-2: #ecebe9;
-  --border: #d7d6d2;
-  --border-strong: #b6b5af;
-  --text: #1b1b19;
-  --muted: #676762;
-  --faint: #94938c;
-  --accent: #8f5615; /* ámbar; oscurecido para pasar contraste AA (≥5:1) sobre --bg y --surface-2 */
-  --accent-weak: #f0e6da;
+  --surface-2: #f1f3f4;
+  --border: #e3e3e6;
+  --border-strong: #c4c7cc;
+  --text: #1f1f22;
+  --muted: #5f6368;
+  --faint: #8a8d93;
+  --accent: #0f6d80; /* teal; contraste AA (≥5.5:1) sobre --bg y --surface-2, y con texto blanco encima */
+  --accent-weak: #e1eef1;
+  --on-accent: #ffffff; /* texto sobre un fondo de acento (botón primario) */
   --error: #a83c2b;
 
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, Menlo, monospace;
@@ -32,16 +35,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #161615;
-    --surface: #1e1e1c;
-    --surface-2: #262624;
-    --border: #333330;
-    --border-strong: #47473f;
-    --text: #e6e5e0;
-    --muted: #9b9b91;
-    --faint: #6d6d64;
-    --accent: #d5952f;
-    --accent-weak: #2c2519;
+    --bg: #0e0e10;
+    --surface: #161619;
+    --surface-2: #1e1e22;
+    --border: #2a2a30;
+    --border-strong: #3a3a42;
+    --text: #e8e8ea;
+    --muted: #9a9da3;
+    --faint: #6b6e74;
+    --accent: #3fbcd4;
+    --accent-weak: #122a30;
+    --on-accent: #0e0e10; /* el teal claro del modo oscuro pide tinta oscura encima */
     --error: #e0725c;
   }
 }
@@ -60,8 +64,7 @@ body {
 
 code { font-family: var(--mono); font-size: 0.9em; }
 
-/* enlaces: color de texto + subrayado tenue (siempre legible); ámbar al hover/foco.
-   El ámbar sobre --bg no llega a AA para texto normal, así que no se usa en reposo. */
+/* enlaces: color de texto + subrayado tenue (siempre legible); teal al hover/foco. */
 a {
   color: inherit;
   text-decoration-line: underline;
@@ -94,7 +97,7 @@ summary:focus-visible { outline: var(--focus); outline-offset: 2px; }
 }
 .tagline-sub { margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--faint); }
 abbr[title] { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
-/* siglas del subtítulo enlazadas al glosario: ámbar (acento deliberado, pasa AA),
+/* siglas del subtítulo enlazadas al glosario: teal (acento deliberado, pasa AA),
    sin subrayado del enlace — el abbr ya trae su punteado */
 .tagline a { text-decoration: none; color: var(--accent); }
 .tagline a abbr { color: inherit; cursor: pointer; }
@@ -151,7 +154,7 @@ main {
   margin: 0.6rem 0;
   padding: 0.5rem 1.2rem;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
   font-family: var(--mono);
   font-size: 0.82rem;
@@ -427,7 +430,7 @@ tbody tr:last-child td { border-bottom: none; }
   background: var(--surface);
   padding: 0.55rem 0.7rem;
 }
-.sc-group[data-kind="temporal"] { border-left-color: #6c8ea4; }
+.sc-group[data-kind="temporal"] { border-left-color: #8a7cae; }
 .sc-group[data-kind="medida"] { border-left-color: var(--accent); }
 .sc-group[data-kind="dimension"] { border-left-color: #7d9a6f; }
 .sc-group[data-kind="id"] { border-left-color: var(--faint); }
@@ -543,7 +546,7 @@ select:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-
 }
 button.primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
   cursor: pointer;
   padding: 0.4rem 1rem;

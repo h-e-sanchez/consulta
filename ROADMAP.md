@@ -110,6 +110,27 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Paleta: neutrales fríos estilo Google + acento teal (`?v=15`)
+
+Cierre de la investigación `docs/referencias-estilo.md` con una decisión de paleta,
+tomada sobre una página de comparación (los 3 acentos candidatos sobre un facsímil de
+la UI, en claro y oscuro, con contrastes WCAG).
+
+- **Neutrales compartidos (para éste y próximos repos), alineados a la spec de
+  documentación de Google:** fondo casi blanco `#f7f8f8` / `--surface #ffffff`,
+  `--surface-2 #f1f3f4`, `--muted #5f6368` (gris secundario exacto de Google),
+  divisores de 1px, cero sombras. Oscuro: `--bg #0e0e10` … `--muted #9a9da3` (registro
+  Linear/Vercel: hairline sin sombra).
+- **Acento teal:** `--accent #0f6d80` (claro) / `#3fbcd4` (oscuro). Contraste
+  ≥5.5:1 sobre `--bg` y `--surface-2`, 6.2:1 con texto blanco encima (botón). Lee
+  «herramienta de datos» sin copiar a nadie (DuckDB usa amarillo).
+- `--accent-weak` re-teñido (`#e1eef1` / `#122a30`). `--error` terracota sin cambios
+  (rojo semántico, complementa al teal).
+- Esquema de columnas: `temporal` pasa de azul-gris a violeta `#8a7cae` para no
+  confundirse con el teal; `medida` sigue el acento. Paleta multi-serie del gráfico
+  recompuesta como set categórico que arma con el teal (coral, oro, salvia, violeta…).
+- Sin tocar tipografía (IBM Plex Mono/Sans) ni el registro plano «ficha técnica».
+
 ### 2026-09-08 — Fix: los ejes del gráfico se elegían por «la primera columna de cada tipo» (`?v=14`)
 
 - Reporte: con un CSV real ancho (nómina) el gráfico agrupaba por `Fecha Ingreso` en

@@ -1156,7 +1156,7 @@ function drawChart() {
     return e;
   };
   const asNum = (v) => (v instanceof Date ? v.getTime() : Number(v));
-  const palette = ["var(--accent)", "#6c8ea4", "#a88b56", "#7d9a6f", "#9a6f8e", "#5f7f8a", "#b0894f", "#748c5e"];
+  const palette = ["var(--accent)", "#c9705b", "#b0894f", "#7d9a6f", "#8a7cae", "#5f7f8a", "#a8636f", "#748c5e"];
 
   const legend = (keys) =>
     keys.forEach((sk, i) => {
