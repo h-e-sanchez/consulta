@@ -1,0 +1,2 @@
+# Artefactos de terceros vendorizados: sin conversión de fin de línea ni diff.
+vendor/duckdb/** binary

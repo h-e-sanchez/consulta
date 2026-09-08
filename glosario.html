@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <header class="site-header">
@@ -89,6 +89,12 @@
         <dd><em>Online Analytical Processing</em>: consultas de análisis (agregar, agrupar, cruzar
           muchas filas) en oposición a las de un sistema transaccional (insertar/actualizar
           registros de a uno).</dd>
+
+        <dt id="vendor">runtime vendorizado / offline</dt>
+        <dd>El motor de DuckDB (el bundle de código y los binarios <a href="#wasm">WASM</a>) está
+          guardado dentro del propio sitio, en <code>vendor/duckdb/</code>, en vez de bajarse de un
+          <abbr title="Content Delivery Network: red de servidores que sirve archivos comunes">CDN</abbr>.
+          Así <code>consulta</code> funciona sin conexión a internet, también la primera vez que se abre.</dd>
       </dl>
     </section>
 

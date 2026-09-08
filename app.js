@@ -1,12 +1,14 @@
 // consulta — SQL sobre CSV y Parquet, 100% en el navegador.
 //
-// El motor es DuckDB-WASM: se descarga una sola vez desde jsDelivr (~11 MB, luego
-// queda en caché del navegador) y corre en un Web Worker. El archivo del usuario se
-// registra como un buffer en memoria y nunca sale del equipo.
+// El motor es DuckDB-WASM: el runtime va vendorizado en vendor/duckdb/ (bundle ESM +
+// binarios .wasm + workers), así que no hay tráfico saliente ni en el primer arranque.
+// Corre en un Web Worker; el archivo del usuario se registra como un buffer en memoria
+// y nunca sale del equipo. jsDelivr queda solo como fallback si el runtime local falla.
 
-// jsDelivr's `+esm` reescribe los import bare de dependencias (apache-arrow) que un
-// navegador sin bundler no resuelve; por eso no se usa el .mjs crudo del paquete.
-import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm";
+// El bundle vendorizado (vendor/README.md documenta cómo regenerarlo) trae apache-arrow
+// incluido; el .mjs crudo del paquete importa "apache-arrow" bare y un navegador sin
+// bundler no lo resuelve.
+import * as duckdb from "./vendor/duckdb/duckdb-wasm.js";
 
 // ---------------------------------------------------------------- estado global
 const state = {
@@ -34,28 +36,46 @@ function setEngine(stateName, text) {
   if (text) engineStatusText.textContent = text;
 }
 
+// Runtime vendorizado. Rutas relativas al documento; el worker se carga vía
+// importScripts con URL absoluta (un blob worker no resuelve rutas relativas).
+const LOCAL_BUNDLES = {
+  mvp: { mainModule: "vendor/duckdb/duckdb-mvp.wasm", mainWorker: "vendor/duckdb/duckdb-browser-mvp.worker.js" },
+  eh: { mainModule: "vendor/duckdb/duckdb-eh.wasm", mainWorker: "vendor/duckdb/duckdb-browser-eh.worker.js" },
+};
+
+async function instantiateFrom(bundle) {
+  const workerScript = new URL(bundle.mainWorker, location.href).href;
+  const workerUrl = URL.createObjectURL(
+    new Blob([`importScripts(${JSON.stringify(workerScript)});`], { type: "text/javascript" })
+  );
+  const worker = new Worker(workerUrl);
+  const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
+  const db = new duckdb.AsyncDuckDB(logger, worker);
+  await db.instantiate(new URL(bundle.mainModule, location.href).href, bundle.pthreadWorker);
+  URL.revokeObjectURL(workerUrl);
+  return db;
+}
+
 async function initEngine() {
   if (state.initPromise) return state.initPromise;
 
   state.initPromise = (async () => {
-    setEngine("loading", "Motor SQL: descargando runtime de DuckDB (~11 MB, se cachea)…");
-    const bundles = duckdb.getJsDelivrBundles();
-    const bundle = await duckdb.selectBundle(bundles);
-
-    const workerUrl = URL.createObjectURL(
-      new Blob([`importScripts("${bundle.mainWorker}");`], { type: "text/javascript" })
-    );
-    const worker = new Worker(workerUrl);
-    const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
-    const db = new duckdb.AsyncDuckDB(logger, worker);
-    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-    URL.revokeObjectURL(workerUrl);
+    setEngine("loading", "Motor SQL: cargando runtime de DuckDB (vendorizado)…");
+    let db;
+    try {
+      db = await instantiateFrom(await duckdb.selectBundle(LOCAL_BUNDLES));
+    } catch (localErr) {
+      // El runtime local no cargó (deploy en subpath inesperado, archivo ausente): CDN.
+      console.warn("consulta: runtime local no disponible, probando jsDelivr —", localErr);
+      setEngine("loading", "Motor SQL: runtime local no disponible, cayendo al CDN…");
+      db = await instantiateFrom(await duckdb.selectBundle(duckdb.getJsDelivrBundles()));
+    }
 
     state.db = db;
     state.conn = await db.connect();
     setEngine("ready", "Motor SQL: listo (DuckDB-WASM)");
   })().catch((err) => {
-    setEngine("error", "Motor SQL: no se pudo iniciar — revisa la conexión y recarga.");
+    setEngine("error", "Motor SQL: no se pudo iniciar — recarga la página.");
     state.initPromise = null;
     throw err;
   });
@@ -83,7 +103,7 @@ async function loadBuffer(name, buffer) {
   try {
     await initEngine();
   } catch {
-    showError("El motor SQL no está disponible (sin conexión a jsDelivr en esta carga). Recarga cuando tengas red.");
+    showError("El motor SQL no se pudo iniciar. Recarga la página.");
     return;
   }
 

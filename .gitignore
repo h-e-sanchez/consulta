@@ -3,4 +3,3 @@ node_modules/
 *.log
 .venv/
 __pycache__/
-vendor/*.wasm

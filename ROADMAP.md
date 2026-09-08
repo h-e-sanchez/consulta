@@ -23,13 +23,22 @@ cada sesión.
       las reglas de tipografía para que se vea igual fuera de la página.
 - [ ] Relleno pendiente: tooltip al pasar por un punto; más marcas en el eje Y.
 
-### ☐ Camino B — Offline (cierra el P0)
+### ☑ Camino B — Offline — **hecho 2026-09-08** (`?v=6`) — **P0 cerrado**
 
-- [ ] **`vendor/` con los bundles de DuckDB-WASM.** Auto-alojar el `.wasm` + el
-      worker; envolver `getJsDelivrBundles()` para que apunte a rutas locales con
-      fallback al CDN. Peso: ~11 MB comiteados (o detrás de un `?local=1`).
-- [ ] Verificar en red sin acceso a `cdn.jsdelivr.net`.
-- [ ] Documentar el modo offline en el README y el glosario.
+- [x] **`vendor/duckdb/` con el runtime completo.** Glue ESM bundleado con
+      `apache-arrow@17` (paso puntual de esbuild) + `duckdb-{mvp,eh}.wasm` +
+      los dos workers. `app.js` apunta `selectBundle()` a `LOCAL_BUNDLES` y solo cae
+      a `getJsDelivrBundles()` si el runtime local falla. Peso real: **~75 MB al
+      repo** (los .wasm raw pesan 34–39 MB c/u; el descargable es ~7 MB gzip). Se
+      quitó `vendor/*.wasm` del `.gitignore`.
+- [x] Verificado: el access log del server local solo registra `/vendor/duckdb/*`
+      (glue + eh.worker + eh.wasm), cero peticiones a jsDelivr. El `mjs` del bundle
+      se renombró a `.js` (Python `http.server` sirve `.mjs` como `text/plain` y el
+      navegador lo rechaza como módulo).
+- [x] Documentado en `README.md`, `glosario.html` (#vendor) y `vendor/README.md`
+      (cómo regenerar al subir de versión).
+- [ ] Queda como único fetch externo: las tipografías IBM Plex (Google Fonts,
+      no bloqueante). Auto-alojarlas también sería el cierre completo.
 
 ### ☐ Camino C — Persistencia y perfilado
 
@@ -85,6 +94,20 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-08 — Camino B (offline, P0)
+
+- Runtime de DuckDB-WASM auto-alojado en `vendor/duckdb/`: `duckdb-wasm.js` (glue
+  `dist/duckdb-browser.mjs` bundleado con `apache-arrow@17` vía esbuild), los dos
+  `.wasm` y los dos workers `.js`. `vendor/README.md` documenta la regeneración.
+- `app.js`: import del glue local; `LOCAL_BUNDLES` + `instantiateFrom()` con el
+  worker cargado por `importScripts` de URL absoluta; fallback a `getJsDelivrBundles()`
+  si el runtime local no carga. Se quitó `vendor/*.wasm` del `.gitignore`.
+- Gotcha: el bundle salió como `.mjs` y `python -m http.server` lo sirve como
+  `text/plain` → el navegador lo rechaza como módulo. Renombrado a `.js`.
+- Peso real vs. el estimado del roadmap: los `.wasm` raw son 34–39 MB (no ~11 MB;
+  ese número era el gzip). El repo crece ~75 MB. Decisión del candidato: committear
+  ambos bundles (offline en cualquier navegador).
 
 ### 2026-09-08 — Camino A (gráfico)
 

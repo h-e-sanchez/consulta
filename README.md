@@ -9,8 +9,9 @@
 ## Diseño
 
 - **Ejecución local.** DuckDB-WASM sobre un Web Worker; el archivo se monta como
-  buffer en el sistema de archivos virtual del runtime. Cero tráfico saliente, cero
-  superficie de servidor.
+  buffer en el sistema de archivos virtual del runtime. El runtime va **vendorizado**
+  (`vendor/duckdb/`): el motor no toca ningún CDN, ni en el primer arranque, y el
+  archivo del usuario nunca sale del navegador.
 - **Columnar y delimitado.** Ingesta nativa de Parquet (`read_parquet`) y de CSV con
   inferencia de esquema sobre el archivo completo (`read_csv_auto`, `SAMPLE_SIZE=-1`).
 - **Perfilado enriquecido en una pasada.** Por columna: tipo, nulos, ceros,
@@ -32,8 +33,9 @@
   encabezados para armar un `SELECT`.
 - **Glosario.** `glosario.html` define en lenguaje llano cada término (CSV, Parquet,
   CTE, cuantil, WASM…). Nada hace falta saberlo de antemano.
-- **Sin tooling.** HTML + módulos ES + CSS. Única dependencia de runtime: el bundle
-  WASM, resuelto desde CDN en el primer arranque y cacheado.
+- **Sin tooling.** HTML + módulos ES + CSS, sin paso de build. El runtime de DuckDB
+  (bundle ESM + `.wasm` + workers) está auto-alojado en `vendor/duckdb/`; solo
+  regenerarlo al subir de versión necesita Node (ver `vendor/README.md`).
 
 ## Uso
 
@@ -78,11 +80,18 @@ ON segmento USING sum(valor) ORDER BY mes;
 
 Despliegue estático (GitHub Pages), sin paso de build. Backlog en [`ROADMAP.md`](ROADMAP.md).
 
-## Límite conocido
+## Operación aislada
 
-El runtime se descarga desde jsDelivr en el primer arranque (~11 MB, luego en caché).
-Para operación aislada, los bundles de `@duckdb/duckdb-wasm` se auto-alojan en
-`vendor/` y se apunta `getJsDelivrBundles()` a rutas locales — pendiente.
+El runtime de DuckDB-WASM (`@duckdb/duckdb-wasm@1.29.0` + `apache-arrow@17.0.0`) va
+auto-alojado en `vendor/duckdb/`: el **motor** no hace ninguna petición a un CDN, ni
+siquiera en el primer arranque. `app.js` apunta `selectBundle()` a los bundles
+locales y solo cae a `getJsDelivrBundles()` si el runtime local no carga (deploy en
+un subpath inesperado, archivo ausente). Regeneración documentada en
+[`vendor/README.md`](vendor/README.md).
+
+Único fetch externo que queda: las tipografías IBM Plex desde Google Fonts (en el
+`<head>`, no bloqueante — sin red cae al stack monoespaciado/sans del sistema). El
+archivo de datos del usuario nunca se transmite, con o sin fuentes.
 
 ---
 
@@ -95,4 +104,5 @@ frequencies); DuckDB-dialect SQL editor with a template library; a CTE assistant
 composes `WITH` chains; SVG charts (bar, line, multi-series, stacked area, scatter)
 with drag-to-zoom on the X axis, toggleable data labels, per-series legend and
 standalone-SVG export; CSV export. A deterministic synthetic-relation generator with
-four time-oriented shapes. No build step.
+four time-oriented shapes. The DuckDB-WASM runtime is self-hosted in `vendor/duckdb/`,
+so the site makes no CDN request even on first load. No build step.
