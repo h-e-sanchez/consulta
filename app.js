@@ -1722,6 +1722,11 @@ $("#result-chart").addEventListener("dblclick", () => {
 });
 $("#chart-download").addEventListener("click", downloadChartSvg);
 
+// El interruptor día/noche (lógica en el <script> inline del HTML) reevalúa los
+// tokens CSS; el SVG del gráfico se redibuja para que los colores embebidos y la
+// descarga a SVG queden en el tema vigente.
+window.addEventListener("consulta:themechange", () => drawChart());
+
 $("#cte-add").addEventListener("click", addCte);
 $("#cte-compose").addEventListener("click", composeCte);
 

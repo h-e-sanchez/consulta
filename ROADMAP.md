@@ -110,6 +110,20 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Interruptor día / noche (`?v=16`)
+
+- Botón `#theme-toggle` en la cabecera (arriba a la derecha) en `index.html` y
+  `glosario.html`. Alterna claro ↔ oscuro y **persiste la elección** en
+  `localStorage` (`consulta:theme`).
+- Lógica en un `<script>` inline en el `<head>` de cada página (glosario no carga
+  `app.js`): corre **antes del primer render** para no parpadear, estampa
+  `data-theme` en `<html>`, sigue al SO mientras no haya elección explícita.
+- CSS: los tokens oscuros ahora se aplican por
+  `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` **y** por
+  `:root[data-theme="dark"]`, así una elección a mano gana en ambos sentidos.
+- `app.js` escucha `consulta:themechange` y redibuja el gráfico (colores embebidos
+  del SVG + descarga).
+
 ### 2026-09-08 — Paleta: neutrales fríos estilo Google + acento teal (`?v=15`)
 
 Cierre de la investigación `docs/referencias-estilo.md` con una decisión de paleta,

@@ -33,8 +33,11 @@
   --focus: 2px solid var(--accent);
 }
 
+/* tokens del modo oscuro. Se aplican por preferencia del SO (salvo que el visitante
+   haya elegido "claro" a mano) y también por elección explícita vía #theme-toggle,
+   que estampa data-theme en <html>. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0e0e10;
     --surface: #161619;
     --surface-2: #1e1e22;
@@ -48,6 +51,20 @@
     --on-accent: #0e0e10; /* el teal claro del modo oscuro pide tinta oscura encima */
     --error: #e0725c;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #0e0e10;
+  --surface: #161619;
+  --surface-2: #1e1e22;
+  --border: #2a2a30;
+  --border-strong: #3a3a42;
+  --text: #e8e8ea;
+  --muted: #9a9da3;
+  --faint: #6b6e74;
+  --accent: #3fbcd4;
+  --accent-weak: #122a30;
+  --on-accent: #0e0e10;
+  --error: #e0725c;
 }
 
 * { box-sizing: border-box; }
@@ -78,10 +95,34 @@ summary:focus-visible { outline: var(--focus); outline-offset: 2px; }
 
 /* ---- cabecera ---- */
 .site-header {
+  position: relative;
   max-width: 960px;
   margin: 0 auto;
   padding: 2.25rem 1.5rem 1.25rem;
   border-bottom: 1px solid var(--border);
+}
+
+/* ---- interruptor día / noche ---- */
+.theme-toggle {
+  position: absolute;
+  top: 1.9rem;
+  right: 1.5rem;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.theme-toggle::before { content: "◐ "; }
+.theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+/* en pantallas angostas el subtítulo pasa a ancho completo: deja aire para el botón */
+@media (max-width: 640px) {
+  .tagline, .tagline-sub { padding-right: 4.5rem; }
 }
 .site-header h1 {
   margin: 0;
