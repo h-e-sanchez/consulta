@@ -1,0 +1,17 @@
+centro_costo,mes,componente,monto,colaboradores
+Operaciones,2026-01,Sueldo Base,18500000,42
+Operaciones,2026-01,Bono,3200000,42
+Operaciones,2026-02,Sueldo Base,18700000,43
+Operaciones,2026-02,Bono,1100000,43
+Comercial,2026-01,Sueldo Base,12300000,28
+Comercial,2026-01,Bono,4500000,28
+Comercial,2026-02,Sueldo Base,12300000,27
+Comercial,2026-02,Bono,900000,27
+Administracion,2026-01,Sueldo Base,9800000,19
+Administracion,2026-01,Bono,600000,19
+Administracion,2026-02,Sueldo Base,9800000,19
+Administracion,2026-02,Bono,600000,19
+Tecnologia,2026-01,Sueldo Base,15200000,16
+Tecnologia,2026-01,Bono,2100000,16
+Tecnologia,2026-02,Sueldo Base,15600000,17
+Tecnologia,2026-02,Bono,800000,17

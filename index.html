@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>consulta — SQL sobre CSV y Parquet en el navegador</title>
+<meta name="description" content="Carga un CSV o un Parquet y consúltalo con SQL sin instalar nada. Perfilado automático + editor SQL, todo client-side: el archivo nunca sale de tu equipo.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>consulta</h1>
+    <p class="tagline">Carga un CSV o un Parquet y consúltalo con SQL — en el navegador, sin instalar nada, sin que el archivo salga de tu equipo.</p>
+  </header>
+
+  <main>
+    <section id="drop-zone" class="drop-zone">
+      <p>Arrastra un archivo <strong>.csv</strong> o <strong>.parquet</strong> aquí, o</p>
+      <label class="file-button">
+        Elegir archivo
+        <input type="file" id="file-input" accept=".csv,.tsv,.parquet,text/csv">
+      </label>
+      <p class="muted">¿Sin un archivo a mano? Prueba con el de ejemplo:
+        <a href="#" data-sample="data/muestra.csv">muestra.csv</a> ·
+        <a href="#" data-sample="data/muestra.parquet">muestra.parquet</a>
+        (presupuesto de nómina sintético, 4 centros de costo).</p>
+      <p id="file-error" class="error" hidden></p>
+      <div class="engine-status" id="engine-status" data-state="idle">
+        <span class="dot"></span>
+        <span id="engine-status-text">Motor SQL: se inicia al cargar el primer archivo</span>
+      </div>
+    </section>
+
+    <section id="workspace" hidden>
+      <div class="file-bar">
+        <span class="fname" id="wb-name">—</span>
+        <span class="fmeta" id="wb-meta"></span>
+        <button type="button" class="ghost" id="wb-reset">Cargar otro</button>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-preview" aria-controls="panel-preview" aria-selected="true">Vista previa</button>
+        <button role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false">Perfilado</button>
+        <button role="tab" id="tab-query" aria-controls="panel-query" aria-selected="false">Consulta SQL</button>
+        <button role="tab" id="tab-chart" aria-controls="panel-chart" aria-selected="false">Gráfico</button>
+      </div>
+
+      <!-- Vista previa -->
+      <div class="panel" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview">
+        <h2>Primeras filas <span class="muted" id="preview-count"></span></h2>
+        <p class="hint">La tabla se registró como <code>datos</code>. Cámbiale el nombre en la pestaña <em>Consulta SQL</em> si prefieres.</p>
+        <div class="table-scroll"><table id="preview-table"></table></div>
+      </div>
+
+      <!-- Perfilado -->
+      <div class="panel" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
+        <h2>Perfilado de columnas</h2>
+        <p class="hint">Generado con <code>SUMMARIZE datos</code> — una sola pasada de DuckDB sobre todo el archivo.</p>
+        <div class="table-scroll"><table id="profile-table"></table></div>
+      </div>
+
+      <!-- Consulta SQL -->
+      <div class="panel" id="panel-query" role="tabpanel" aria-labelledby="tab-query" hidden>
+        <h2>Consulta SQL</h2>
+        <p class="hint">Dialecto DuckDB. La fuente es la tabla <code>datos</code>.</p>
+        <textarea class="sql-editor" id="sql-editor" spellcheck="false" aria-label="Editor SQL"></textarea>
+        <div class="chips" id="sql-chips"></div>
+        <div class="sql-actions">
+          <button type="button" class="primary" id="run-btn">Ejecutar</button>
+          <span class="kbd">Ctrl/Cmd + Enter</span>
+          <button type="button" class="ghost" id="export-btn" hidden>Exportar resultado a CSV</button>
+        </div>
+        <p class="result-meta" id="result-meta"></p>
+        <div class="table-scroll"><table id="result-table"></table></div>
+        <details class="explain" id="explain-panel" hidden>
+          <summary>Ver la consulta que se ejecutó</summary>
+          <pre id="explain-sql"></pre>
+        </details>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="panel" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
+        <h2>Gráfico rápido</h2>
+        <p class="hint">Grafica el último resultado de la pestaña <em>Consulta SQL</em>: una columna de categoría y una numérica.</p>
+        <div class="chart-controls">
+          <label>Categoría (eje X)
+            <select id="chart-x"></select>
+          </label>
+          <label>Valor (eje Y)
+            <select id="chart-y"></select>
+          </label>
+        </div>
+        <div class="chart-scroll">
+          <svg id="result-chart" role="img" aria-label="Gráfico de barras del resultado de la consulta"></svg>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Proyecto de <a href="https://github.com/h-e-sanchez">Hernán Elías Sánchez Aguilera</a>.
+      El procesamiento ocurre 100% en tu navegador vía DuckDB-WASM; el archivo nunca se envía a ningún servidor.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
