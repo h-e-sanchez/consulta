@@ -25,6 +25,14 @@
       </label>
       <div class="synth">
         <span class="synth-label">o genera una relación sintética</span>
+        <label>forma
+          <select id="synth-shape">
+            <option value="serie" selected>serie agregada mensual</option>
+            <option value="panel">panel diario multi-entidad</option>
+            <option value="eventos">registro de eventos</option>
+            <option value="quiebres">métrica con quiebres</option>
+          </select>
+        </label>
         <label>filas
           <select id="synth-rows">
             <option value="1000">1.000</option>
@@ -44,8 +52,8 @@
         </label>
         <button type="button" class="primary" id="synth-btn">Generar</button>
       </div>
-      <p class="muted">Esquema dominio-neutro: <code>id, categoria, grupo, fecha, valor, cantidad, activo</code>
-        — tipos mixtos y nulos inyectados para ejercitar el perfilado.</p>
+      <p class="muted">Cuatro formas dominio-neutro, todas con dimensión temporal, tipos mixtos y
+        nulos inyectados. El PRNG es determinista: la semilla reproduce la relación exacta.</p>
       <p id="file-error" class="error" hidden></p>
       <div class="engine-status" id="engine-status" data-state="idle">
         <span class="dot"></span>
@@ -57,6 +65,7 @@
       <div class="file-bar">
         <span class="fname" id="wb-name">—</span>
         <span class="fmeta" id="wb-meta"></span>
+        <button type="button" class="ghost" id="copy-cols">copiar columnas</button>
         <button type="button" class="ghost" id="wb-reset">Cargar otro</button>
       </div>
 
@@ -64,6 +73,7 @@
         <button role="tab" id="tab-preview" aria-controls="panel-preview" aria-selected="true">Vista previa</button>
         <button role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false">Perfilado</button>
         <button role="tab" id="tab-query" aria-controls="panel-query" aria-selected="false">Consulta SQL</button>
+        <button role="tab" id="tab-combinar" aria-controls="panel-combinar" aria-selected="false">Combinar</button>
         <button role="tab" id="tab-chart" aria-controls="panel-chart" aria-selected="false">Gráfico</button>
       </div>
 
@@ -77,19 +87,25 @@
       <!-- Perfilado -->
       <div class="panel" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
         <h2>Perfilado de columnas</h2>
-        <p class="hint">Derivado con <code>SUMMARIZE datos</code> — un barrido único sobre la relación completa.</p>
+        <p class="hint">Tipo, nulos, ceros, cardinalidad y cuantiles (p05 / mediana / p95) en una pasada.</p>
         <div class="table-scroll"><table id="profile-table"></table></div>
+        <h3>Desglose por dimensión</h3>
+        <div id="dim-breakdown" class="dim-grid"></div>
       </div>
 
       <!-- Consulta SQL -->
       <div class="panel" id="panel-query" role="tabpanel" aria-labelledby="tab-query" hidden>
         <h2>Consulta SQL</h2>
-        <p class="hint">Dialecto DuckDB. La fuente es la tabla <code>datos</code>.</p>
+        <p class="hint">Dialecto DuckDB sobre la relación <code>datos</code>.</p>
         <textarea class="sql-editor" id="sql-editor" spellcheck="false" aria-label="Editor SQL"></textarea>
-        <div class="chips" id="sql-chips"></div>
+        <div class="sql-toolbar">
+          <input type="text" id="headers-in" placeholder="pega encabezados (a, b, c) → arma un SELECT">
+        </div>
+        <div id="templates" class="templates"></div>
         <div class="sql-actions">
           <button type="button" class="primary" id="run-btn">Ejecutar</button>
           <span class="kbd">Ctrl/Cmd + Enter</span>
+          <button type="button" class="ghost" id="copy-headers" hidden>Copiar encabezados</button>
           <button type="button" class="ghost" id="export-btn" hidden>Exportar resultado a CSV</button>
         </div>
         <p class="result-meta" id="result-meta"></p>
@@ -100,20 +116,44 @@
         </details>
       </div>
 
+      <!-- Combinar (asistente de CTEs) -->
+      <div class="panel" id="panel-combinar" role="tabpanel" aria-labelledby="tab-combinar" hidden>
+        <h2>Asistente de CTEs</h2>
+        <p class="hint">Encadena subconsultas nombradas; cada bloque puede leer del anterior. Al
+          componer se arma un <code>WITH … AS (…)</code> y se inserta en el editor SQL.</p>
+        <div id="cte-list" class="cte-list"></div>
+        <div class="sql-actions">
+          <button type="button" class="ghost" id="cte-add">+ bloque</button>
+          <button type="button" class="primary" id="cte-compose">Componer y ejecutar</button>
+        </div>
+      </div>
+
       <!-- Gráfico -->
       <div class="panel" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
         <h2>Gráfico</h2>
-        <p class="hint">Proyección del último resultado: eje categórico contra medida numérica.</p>
+        <p class="hint">Proyección del último resultado de la pestaña <em>Consulta SQL</em>.</p>
         <div class="chart-controls">
-          <label>Categoría (eje X)
+          <label>tipo
+            <select id="chart-type">
+              <option value="barras" selected>barras</option>
+              <option value="linea">línea</option>
+              <option value="multi">multi-serie</option>
+              <option value="area">área apilada</option>
+              <option value="scatter">dispersión</option>
+            </select>
+          </label>
+          <label>eje X
             <select id="chart-x"></select>
           </label>
-          <label>Valor (eje Y)
+          <label>eje Y
             <select id="chart-y"></select>
+          </label>
+          <label id="chart-series-wrap" hidden>serie
+            <select id="chart-series"></select>
           </label>
         </div>
         <div class="chart-scroll">
-          <svg id="result-chart" role="img" aria-label="Gráfico de barras del resultado de la consulta"></svg>
+          <svg id="result-chart" role="img" aria-label="Gráfico del resultado de la consulta"></svg>
         </div>
       </div>
     </section>

@@ -171,7 +171,8 @@ main {
 }
 .file-bar .fname { color: var(--accent); font-weight: 500; word-break: break-all; }
 .file-bar .fmeta { color: var(--muted); }
-.file-bar button { margin-left: auto; }
+.file-bar button:nth-last-of-type(2) { margin-left: auto; }
+.file-bar button { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
 
 /* ---- pestañas ---- */
 .tabs {
@@ -203,6 +204,15 @@ main {
   font-weight: 600;
 }
 .panel .hint { margin: 0 0 0.9rem; color: var(--muted); font-size: 0.82rem; }
+.panel h3 {
+  margin: 1.6rem 0 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
 /* ---- tablas ---- */
 .table-scroll, .chart-scroll {
@@ -261,8 +271,28 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .sql-actions .kbd { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); }
 
-.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.7rem; }
-.chips button {
+/* ---- barra de encabezados ---- */
+.sql-toolbar { margin-top: 0.6rem; }
+#headers-in { width: 100%; }
+
+/* ---- plantillas ---- */
+.templates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+.tpl-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.tpl-title {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+.tpl-group button {
   font-family: var(--mono);
   font-size: 0.72rem;
   padding: 0.25rem 0.6rem;
@@ -271,7 +301,69 @@ tbody tr:last-child td { border-bottom: none; }
   color: var(--muted);
   cursor: pointer;
 }
-.chips button:hover { color: var(--text); border-color: var(--accent); }
+.tpl-group button:hover { color: var(--text); border-color: var(--accent); }
+
+/* ---- desglose por dimensión ---- */
+.dim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+.dim {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.6rem 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+.dim-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+}
+.dim-name { color: var(--accent); font-weight: 500; }
+.dim-row {
+  display: grid;
+  grid-template-columns: 1fr 3.5rem;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+  padding: 0.12rem 0;
+}
+.dim-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dim-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: var(--surface-2);
+}
+.dim-bar > span { display: block; height: 100%; background: var(--accent); }
+.dim-n { text-align: right; color: var(--muted); font-size: 0.68rem; }
+.dim-more { color: var(--faint); margin-top: 0.35rem; }
+
+/* ---- asistente de CTEs ---- */
+.cte-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.cte-item {
+  display: grid;
+  grid-template-columns: 8rem 1fr auto;
+  gap: 0.5rem;
+  align-items: start;
+}
+.cte-name { font-family: var(--mono); font-size: 0.78rem; }
+.cte-body {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+.cte-del { align-self: start; }
+@media (max-width: 560px) {
+  .cte-item { grid-template-columns: 1fr auto; }
+  .cte-name { grid-column: 1 / -1; }
+}
 
 .result-meta { margin-top: 0.85rem; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
 .result-meta.err { color: var(--error); white-space: pre-wrap; }
@@ -313,7 +405,7 @@ button.ghost:hover { color: var(--text); }
   letter-spacing: 0.04em;
   color: var(--muted);
 }
-#result-chart { width: 100%; height: 300px; display: block; }
+#result-chart { width: 100%; height: 340px; display: block; }
 .bar-label, .axis-label { font-family: var(--mono); font-size: 0.66rem; fill: var(--text); }
 .axis-label.muted { fill: var(--muted); }
 
