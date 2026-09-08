@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>consulta — SQL sobre CSV y Parquet en el navegador</title>
-<meta name="description" content="Carga un CSV o un Parquet y consúltalo con SQL sin instalar nada. Perfilado automático + editor SQL, todo client-side: el archivo nunca sale de tu equipo.">
+<meta name="description" content="Motor OLAP embebido en el cliente: SQL sobre CSV y Parquet sin backend, sin ingesta, sin que el archivo salga del navegador. Perfilado en una pasada + editor SQL.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
     <h1>consulta</h1>
-    <p class="tagline">Carga un CSV o un Parquet y consúltalo con SQL — en el navegador, sin instalar nada, sin que el archivo salga de tu equipo.</p>
+    <p class="tagline">SQL sobre CSV y Parquet, ejecutado en el cliente. Sin backend, sin ingesta, sin que el archivo salga del navegador.</p>
   </header>
 
   <main>
@@ -20,10 +20,10 @@
         Elegir archivo
         <input type="file" id="file-input" accept=".csv,.tsv,.parquet,text/csv">
       </label>
-      <p class="muted">¿Sin un archivo a mano? Prueba con el de ejemplo:
+      <p class="muted">Sin archivo a mano:
         <a href="#" data-sample="data/muestra.csv">muestra.csv</a> ·
         <a href="#" data-sample="data/muestra.parquet">muestra.parquet</a>
-        (presupuesto de nómina sintético, 4 centros de costo).</p>
+        — serie mensual sintética por segmento, 16 filas.</p>
       <p id="file-error" class="error" hidden></p>
       <div class="engine-status" id="engine-status" data-state="idle">
         <span class="dot"></span>
@@ -48,14 +48,14 @@
       <!-- Vista previa -->
       <div class="panel" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview">
         <h2>Primeras filas <span class="muted" id="preview-count"></span></h2>
-        <p class="hint">La tabla se registró como <code>datos</code>. Cámbiale el nombre en la pestaña <em>Consulta SQL</em> si prefieres.</p>
+        <p class="hint">La relación cargada se expone como <code>datos</code>.</p>
         <div class="table-scroll"><table id="preview-table"></table></div>
       </div>
 
       <!-- Perfilado -->
       <div class="panel" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
         <h2>Perfilado de columnas</h2>
-        <p class="hint">Generado con <code>SUMMARIZE datos</code> — una sola pasada de DuckDB sobre todo el archivo.</p>
+        <p class="hint">Derivado con <code>SUMMARIZE datos</code> — un barrido único sobre la relación completa.</p>
         <div class="table-scroll"><table id="profile-table"></table></div>
       </div>
 
@@ -80,8 +80,8 @@
 
       <!-- Gráfico -->
       <div class="panel" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
-        <h2>Gráfico rápido</h2>
-        <p class="hint">Grafica el último resultado de la pestaña <em>Consulta SQL</em>: una columna de categoría y una numérica.</p>
+        <h2>Gráfico</h2>
+        <p class="hint">Proyección del último resultado: eje categórico contra medida numérica.</p>
         <div class="chart-controls">
           <label>Categoría (eje X)
             <select id="chart-x"></select>
@@ -98,8 +98,8 @@
   </main>
 
   <footer class="site-footer">
-    <p>Proyecto de <a href="https://github.com/h-e-sanchez">Hernán Elías Sánchez Aguilera</a>.
-      El procesamiento ocurre 100% en tu navegador vía DuckDB-WASM; el archivo nunca se envía a ningún servidor.</p>
+    <p><a href="https://github.com/h-e-sanchez">h-e-sanchez</a> ·
+      ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
   <script type="module" src="app.js"></script>
