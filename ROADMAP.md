@@ -110,6 +110,21 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Fix: el gráfico quedaba con las columnas del dataset anterior (`?v=11`)
+
+- Reporte: al cargar una nueva base, los selectores de eje del Gráfico seguían
+  mostrando `mes`/`total` (o lo que fuera) del dataset previo — parecía hardcodeado.
+- Causa: `finishIngest` reconstruía los presets pero nunca re-sembraba
+  `state.lastResult` ni llamaba a `syncChartControls`; el SVG y los `<select>` de eje
+  quedaban con el estado anterior (`state.lastResult` solo lo setea `runQuery`).
+- Fix: `finishIngest` ahora siembra `state.lastResult` con
+  `SELECT * FROM datos LIMIT 20000` (`CHART_ROW_CAP`) y llama `syncChartControls()`
+  — el gráfico arranca sobre la tabla recién cargada, con sus columnas reales en los
+  ejes; una consulta lo reemplaza como antes.
+- Además: sin preferencia guardada, el tipo de gráfico por defecto es **línea** si
+  hay una columna temporal (antes siempre barras → 200 barras ilegibles con datos
+  crudos). Hint del panel actualizado.
+
 ### 2026-09-08 — Excel / ODS por hojas (`?v=10`)
 
 - **SheetJS 0.20.3** vendorizado en `vendor/sheetjs/xlsx.esm.js` (del CDN propio de

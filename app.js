@@ -181,6 +181,10 @@ async function finishIngest(displayName, sizeBytes, ext, encNote) {
   renderHistory();
   // Restaura la última consulta ejecutada (puede referirse a otras columnas: no se auto-ejecuta).
   $("#sql-editor").value = LS.get("last-sql") || defaultQuery();
+  // El gráfico arranca sobre la tabla recién cargada (una consulta lo reemplaza).
+  // Sin esto, los ejes y el SVG quedan con las columnas del dataset anterior.
+  state.lastResult = await queryGrid(`SELECT * FROM ${state.table} LIMIT ${CHART_ROW_CAP}`);
+  syncChartControls();
   selectTab("tab-preview");
   const wasHidden = workspace.hidden;
   workspace.hidden = false;
@@ -859,6 +863,7 @@ function pasteHeaders() {
 
 // ---------------------------------------------------------------- gráfico
 const CHART_TYPES = ["barras", "linea", "multi", "area", "scatter"];
+const CHART_ROW_CAP = 20000; // filas que el gráfico consume (barras usa menos)
 
 // Zoom del eje X. Siempre en términos del dominio completo (sin zoom):
 //   { kind: "cat", a, b }  → índices de la lista completa de categorías
@@ -891,7 +896,12 @@ function syncChartControls() {
     sSel.add(new Option(c, i));
   });
   const savedType = LS.get("chart-type");
-  if (savedType && CHART_TYPES.includes(savedType)) $("#chart-type").value = savedType;
+  if (savedType && CHART_TYPES.includes(savedType)) {
+    $("#chart-type").value = savedType;
+  } else {
+    // sin preferencia guardada: línea si el resultado tiene una columna temporal, si no barras
+    $("#chart-type").value = colKinds(grid).temporal.some(Boolean) ? "linea" : "barras";
+  }
   deriveChartDefaults();
   updateChartUiState();
   drawChart();
@@ -1138,7 +1148,7 @@ function drawChart() {
 
   // Series categóricas para barras/línea/multi/área. Barras se limita para no
   // volverse ilegible; línea/multi/área admiten miles de puntos (series de tiempo).
-  const rowsUsed = grid.rows.slice(0, type === "barras" ? 400 : 20000);
+  const rowsUsed = grid.rows.slice(0, type === "barras" ? 400 : CHART_ROW_CAP);
   const allCats = [];
   const allIndex = new Map();
   for (const r of rowsUsed) {

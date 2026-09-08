@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <header class="site-header">
@@ -168,8 +168,9 @@
       <!-- Gráfico -->
       <div class="panel" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
         <h2>Gráfico</h2>
-        <p class="hint">Grafica el último resultado de la pestaña <em>Consulta SQL</em>.
-          Un preset arma la consulta y el gráfico de un tirón.</p>
+        <p class="hint">Grafica la tabla cargada (primeras 20.000 filas) o, si ejecutaste una
+          consulta, su resultado. Los ejes se eligen entre las columnas disponibles; un preset
+          arma la consulta y el gráfico de un tirón.</p>
         <div id="chart-presets" class="templates"></div>
         <div class="chart-controls">
           <label>tipo
@@ -213,6 +214,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=10"></script>
+  <script type="module" src="app.js?v=11"></script>
 </body>
 </html>
