@@ -110,6 +110,19 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Fix: los presets de gráfico rompían con nombres de columna con espacios (`?v=12`)
+
+- Reporte: al hacer clic en un preset, el gráfico se rompía.
+- Causa: `chartPresets()` generaba `SELECT "region comercial" AS region comercial` —
+  el alias `AS ${dim}` sin comillas es un error de sintaxis con nombres con espacio o
+  reservados. La consulta fallaba, `runQuery` volvía sin re-sincronizar, y
+  `loadChartPreset` seguía adelante forzando el tipo sobre `state.lastResult` viejo →
+  gráfico roto. El error solo se veía en la pestaña Consulta SQL, que el usuario no
+  estaba mirando.
+- Fix: los dos presets con dimensión ya no aliasan el campo (`${qid(dim)}` conserva
+  el nombre solo). Además `runQuery` devuelve `true/false` y `loadChartPreset` corta
+  a la pestaña Consulta SQL si el preset falla, en vez de dejar un gráfico roto.
+
 ### 2026-09-08 — Fix: el gráfico quedaba con las columnas del dataset anterior (`?v=11`)
 
 - Reporte: al cargar una nueva base, los selectores de eje del Gráfico seguían

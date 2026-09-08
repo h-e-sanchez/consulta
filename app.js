@@ -782,9 +782,11 @@ function resetQueryPanel() {
   state.lastResult = null;
 }
 
+// Devuelve true si la consulta corrió; false si hubo error (para que quien la llama
+// no siga adelante con datos viejos).
 async function runQuery() {
   const sql = $("#sql-editor").value.trim();
-  if (!sql) return;
+  if (!sql) return false;
   const meta = $("#result-meta");
   meta.classList.remove("err");
   meta.textContent = "Ejecutando…";
@@ -799,7 +801,7 @@ async function runQuery() {
     $("#result-table").innerHTML = "";
     $("#export-btn").hidden = true;
     $("#copy-headers").hidden = true;
-    return;
+    return false;
   }
   const ms = Math.max(1, Math.round(performance.now() - t0));
 
@@ -818,6 +820,7 @@ async function runQuery() {
   pushHistory(sql);
 
   syncChartControls();
+  return true;
 }
 
 // ---------------------------------------------------------------- exportar / portapapeles
@@ -966,13 +969,14 @@ function chartPresets() {
     out.push({
       n: "composición en el tiempo",
       type: "area",
-      sql: `SELECT ${per} AS mes, ${qid(dim)} AS ${dim}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1, 2 ORDER BY 1;`,
+      // el 2º campo conserva su nombre sin alias — `AS ${dim}` rompía con nombres con espacios
+      sql: `SELECT ${per} AS mes, ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1, 2 ORDER BY 1;`,
     });
   if (dim)
     out.push({
       n: "comparar dimensiones",
       type: "barras",
-      sql: `SELECT ${qid(dim)} AS ${dim}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1 ORDER BY total DESC;`,
+      sql: `SELECT ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1 ORDER BY total DESC;`,
     });
   const nums = state.schema.filter((s) => s.numeric);
   if (nums.length >= 2 && out.length < 3)
@@ -986,7 +990,11 @@ function chartPresets() {
 
 async function loadChartPreset(p) {
   $("#sql-editor").value = p.sql;
-  await runQuery();
+  if (!(await runQuery())) {
+    // la consulta del preset falló: mostrar el error donde se ve, no dejar un gráfico roto
+    selectTab("tab-query");
+    return;
+  }
   $("#chart-type").value = p.type;
   deriveChartDefaults();
   updateChartUiState();
