@@ -142,12 +142,22 @@ async function queryRows(sql) {
 }
 
 // Devuelve { columns, rows } — rows es array de arrays, valores crudos (para gráfico/export).
+// Arrow entrega DATE/TIMESTAMP como número (días o ms desde epoch); se normaliza a Date.
 async function queryGrid(sql) {
   const table = await state.conn.query(sql);
-  const columns = table.schema.fields.map((f) => f.name);
+  const fields = table.schema.fields;
+  const columns = fields.map((f) => f.name);
+  const temporal = fields.map((f) => /date|timestamp/i.test(String(f.type)));
   const rows = table.toArray().map((row) => {
     const j = row.toJSON();
-    return columns.map((c) => j[c]);
+    return columns.map((c, i) => {
+      let v = j[c];
+      if (temporal[i] && v != null && !(v instanceof Date)) {
+        const nv = typeof v === "bigint" ? Number(v) : v;
+        if (typeof nv === "number") v = new Date(Math.abs(nv) < 1e8 ? nv * 86400000 : nv);
+      }
+      return v;
+    });
   });
   return { columns, rows };
 }
@@ -375,10 +385,7 @@ function syncChartControls() {
   });
 
   // Defaults razonables: primera no-numérica en X, primera numérica en Y.
-  const numericByIdx = grid.columns.map((c, i) => {
-    const s = grid.rows.find((r) => r[i] !== null && r[i] !== undefined)?.[i];
-    return typeof s === "number" || typeof s === "bigint";
-  });
+  const numericByIdx = detectNumeric(grid.columns, grid.rows);
   const xi = numericByIdx.findIndex((n) => !n);
   const yi = numericByIdx.findIndex((n) => n);
   xSel.value = String(xi >= 0 ? xi : 0);
@@ -395,7 +402,7 @@ function drawChart() {
   const xi = Number($("#chart-x").value);
   const yi = Number($("#chart-y").value);
   const data = grid.rows
-    .map((r) => ({ label: String(r[xi] ?? "∅"), value: Number(r[yi]) }))
+    .map((r) => ({ label: fmtCell(r[xi]).text, value: Number(r[yi]) }))
     .filter((d) => Number.isFinite(d.value))
     .slice(0, 40);
   if (data.length === 0) return;
