@@ -4,6 +4,8 @@
 > SQL sobre CSV y Parquet sin backend, sin ingesta y sin que el archivo abandone el
 > navegador.
 
+![consulta — editor SQL y perfilado sobre una relación sintética](docs/captura.jpg)
+
 ## Diseño
 
 - **Ejecución local.** DuckDB-WASM sobre un Web Worker; el archivo se monta como
@@ -27,20 +29,50 @@
 python -m http.server 8000   # un origin HTTP: los módulos ES no cargan sobre file://
 ```
 
-```sql
-SUMMARIZE datos;
-SELECT dim, sum(val) AS agg FROM datos GROUP BY dim ORDER BY agg DESC;
-```
-
-Despliegue estático (GitHub Pages), sin paso de build.
+Carga un archivo o pulsa **Generar** para una relación sintética. En ambos casos la
+fuente queda expuesta como la relación `datos`.
 
 ## Relación de ejemplo
 
-El generador integrado produce una relación dominio-neutro
-(`id, categoria, grupo, fecha, valor, cantidad, activo`) con tipos mixtos y nulos
-inyectados, hasta 10⁶ filas, en CSV o en Parquet — este último materializado por el
-propio DuckDB (`COPY … FORMAT PARQUET`). El PRNG es determinista: una semilla
+El generador integrado produce una relación dominio-neutro con tipos mixtos y nulos
+inyectados (~2–3 %), hasta 10⁶ filas, en CSV o en Parquet — este último materializado
+por el propio DuckDB (`COPY … FORMAT PARQUET`). El PRNG es determinista: una semilla
 reproduce la relación exacta. No se versiona ningún dataset.
+
+| columna     | tipo    | nota                                  |
+|-------------|---------|---------------------------------------|
+| `id`        | BIGINT  | secuencial, sin nulos                 |
+| `categoria` | VARCHAR | 6 niveles, ~2 % nulo                   |
+| `grupo`     | VARCHAR | 3 niveles                             |
+| `fecha`     | DATE    | 24 meses                              |
+| `valor`     | DOUBLE  | ~lognormal, ~3 % nulo                 |
+| `cantidad`  | BIGINT  | 0–499                                 |
+| `activo`    | BOOLEAN | ~68 % verdadero                       |
+
+Consultas que corren tal cual contra esa relación:
+
+```sql
+-- perfilado de una pasada
+SUMMARIZE datos;
+
+-- agregación por dimensión categórica
+SELECT grupo, count(*) AS n, round(avg(valor), 1) AS valor_medio
+FROM datos
+GROUP BY grupo
+ORDER BY n DESC;
+
+-- serie de tiempo mensual
+SELECT date_trunc('month', fecha) AS mes, sum(valor) AS total
+FROM datos
+GROUP BY mes
+ORDER BY mes;
+
+-- fracción de nulos de una columna
+SELECT count(*) - count(valor) AS nulos, count(*) AS total
+FROM datos;
+```
+
+Despliegue estático (GitHub Pages), sin paso de build.
 
 ## Límite conocido
 
