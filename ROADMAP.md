@@ -2,43 +2,82 @@
 
 Estado al **2026-09-08**. El sitio está en vivo
 ([`h-e-sanchez.github.io/consulta`](https://h-e-sanchez.github.io/consulta/)) y
-funcional. Esto es el backlog, ordenado por prioridad.
+funcional. Este archivo se edita a mano: marcá las casillas y elegí el camino de
+cada sesión.
 
-## P0 — cerrar lo abierto
+---
 
-- **`vendor/` con los bundles de DuckDB-WASM.** Auto-alojar el `.wasm` + el worker y
-  apuntar `getJsDelivrBundles()` a rutas locales, para operar sin salida a jsDelivr
-  (redes corporativas que bloqueen CDNs). Es el único punto que hoy rompe el «cero
-  red». Costo: ~11 MB comiteados; o dejarlo como modo opcional detrás de un flag.
+## Mañana — presupuesto: 2–3 h · elegí **un** camino
 
-## P1 — robustez y uso
+> Cada camino entra en 2–3 h. Marcá el elegido y, si sobra tiempo, sumá algo del
+> «relleno».
 
-- **Progreso de consulta.** Hoy una consulta lenta solo muestra «Ejecutando…».
-  Añadir tiempo transcurrido y, para archivos grandes, aviso de que la inferencia de
-  tipos (`SAMPLE_SIZE=-1`) puede tardar — con opción de acotarla.
-- **Persistir la última consulta** en `localStorage` para no perderla al recargar.
-- **Historial de consultas** (las últimas N, clickeables para recuperar).
-- **Archivos grandes.** Probar 50–100 MB y medir; ajustar `SAMPLE_SIZE` según tamaño.
-- **Gráfico.** Leyenda en barras y dispersión cuando hay serie; más marcas de eje;
-  botón «descargar SVG».
-- **Perfilado.** Matriz de correlación entre columnas numéricas; marcar columnas
-  `VARCHAR` que «parecen» fechas y ofrecer castearlas.
+### ☐ Camino A — Gráfico (recomendado: es lo más visible)
 
-## P2 — alcance
+- [ ] **Zoom en el gráfico** — arrastrar para seleccionar un rango del eje X y
+      re-encuadrar; doble clic o botón «reset» para volver.
+- [ ] **Etiquetas de datos** — valor sobre cada punto/barra, con toggle
+      on/off (encenderlas siempre satura cuando hay muchos puntos).
+- [ ] Leyenda para barras y dispersión cuando hay columna de serie.
+- [ ] Botón «descargar SVG».
 
-- **Múltiples relaciones.** Cargar más de un archivo y permitir `JOIN` entre ellos.
-- **Exportar el resultado a Parquet** (además de CSV).
-- **Compartir por URL.** Serializar el SQL en el hash — solo la consulta, nunca los
-  datos.
-- **Modo notebook.** Varias celdas SQL independientes encadenadas (alternativa más
-  libre al asistente de CTEs).
-- **i18n mínimo.** Toggle ES / EN del copy de la interfaz.
+### ☐ Camino B — Offline (cierra el P0)
+
+- [ ] **`vendor/` con los bundles de DuckDB-WASM.** Auto-alojar el `.wasm` + el
+      worker; envolver `getJsDelivrBundles()` para que apunte a rutas locales con
+      fallback al CDN. Peso: ~11 MB comiteados (o detrás de un `?local=1`).
+- [ ] Verificar en red sin acceso a `cdn.jsdelivr.net`.
+- [ ] Documentar el modo offline en el README y el glosario.
+
+### ☐ Camino C — Persistencia y perfilado
+
+- [ ] **Guardar la última consulta** en `localStorage` y restaurarla al abrir.
+- [ ] **Historial** — las últimas ~15 consultas, clickeables para recuperar.
+- [ ] Si sobra: matriz de correlación entre columnas numéricas en el perfilado.
+
+### Relleno (si sobra tiempo en cualquier camino)
+
+- [ ] Persistir el tipo de gráfico y los ejes elegidos entre consultas.
+- [ ] Atajo para copiar una celda de una tabla al portapapeles.
+- [ ] En «pega encabezados», detectar separador (`,` `;` tab) automáticamente. *(ya
+      lo hace parcialmente — revisar TSV)*
+
+---
+
+## Backlog P1 — robustez y uso
+
+- [ ] **Gráfico: zoom** (arrastrar rango en X) y **etiquetas de datos** (toggle).
+- [ ] **Gráfico:** leyenda en barras/dispersión con serie; más marcas de eje;
+      descargar SVG; tooltip al pasar por un punto.
+- [ ] **Progreso de consulta.** Tiempo transcurrido; para archivos grandes, aviso de
+      que la inferencia de tipos (`SAMPLE_SIZE=-1`) puede tardar — con opción de
+      acotarla.
+- [ ] **Persistir la última consulta** (`localStorage`) e **historial** de consultas.
+- [ ] **Archivos grandes.** Probar 50–100 MB; ajustar `SAMPLE_SIZE` según tamaño.
+- [ ] **Perfilado.** Matriz de correlación entre numéricas; marcar `VARCHAR` que
+      «parecen» fechas y ofrecer castearlas.
+
+## Backlog P2 — alcance
+
+- [ ] **Múltiples relaciones.** Cargar más de un archivo y permitir `JOIN`.
+- [ ] **Exportar el resultado a Parquet** (además de CSV).
+- [ ] **Compartir por URL.** Serializar solo el SQL en el hash — nunca los datos.
+- [ ] **Modo notebook.** Celdas SQL independientes encadenadas.
+- [ ] **i18n mínimo.** Toggle ES / EN del copy de la interfaz.
 
 ## No hacer (por ahora)
 
 - Autenticación o guardado en servidor — rompe el modelo client-side.
-- Editor con autocompletado tipo Monaco — peso desproporcionado para el alcance.
+- Editor con autocompletado tipo Monaco — peso desproporcionado.
 - Framework de UI — el vanilla actual entra en un archivo y se mantiene solo.
+
+---
+
+## Nota técnica de deploy
+
+`?v=N` en `style.css`/`app.js` dentro del HTML salta el caché de borde de GitHub
+Pages. **Bumpear el número** en cada cambio de esos archivos, o Pages sirve la
+versión vieja unos minutos.
 
 ---
 
@@ -46,13 +85,12 @@ funcional. Esto es el backlog, ordenado por prioridad.
 
 ### 2026-09-08
 
-- Publicado como repo **público** + **GitHub Pages**. `?v=N` en `style.css`/`app.js`
-  para saltar el caché de borde de Pages (bumpear en cada cambio de esos archivos).
+- Publicado como repo **público** + **GitHub Pages**.
 - **v2:** generador de 4 formas sintéticas (serie mensual · panel diario · registro
   de eventos · métrica con quiebres), perfilado enriquecido (cuantiles, % de ceros,
   desglose por dimensión), 9 plantillas de consulta, asistente de CTEs, 5 tipos de
   gráfico.
-- **Glosario** (`glosario.html`), definiciones del perfilado con `?` y tooltips,
+- **v3:** glosario (`glosario.html`), definiciones del perfilado con `?` y tooltips,
   3 presets de CTE, 3 presets de gráfico, re-derivación de ejes según el tipo.
 - Estilo **«Grafito»** — IBM Plex Mono para títulos, IBM Plex Sans para el cuerpo,
   acento ámbar, todo plano.
