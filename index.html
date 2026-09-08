@@ -7,19 +7,18 @@
 <meta name="description" content="Motor OLAP embebido en el cliente: SQL sobre CSV y Parquet sin backend, sin ingesta, sin que el archivo salga del navegador. Perfilado en una pasada + editor SQL.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css?v=17">
 <script>
-  /* tema día/noche: una elección explícita (localStorage) gana sobre el SO.
-     Se aplica antes del primer render para no parpadear. Comparte lógica con
-     glosario.html; el resto de la app no toca el tema salvo redibujar el gráfico. */
+  /* tema día/noche. El defecto es SIEMPRE claro ("día"), sin mirar la preferencia
+     del SO; el modo oscuro se activa solo si el visitante lo eligió antes (guardado
+     en localStorage). Se aplica antes del primer render para no parpadear. Lógica
+     idéntica en glosario.html. */
   (function () {
     var root = document.documentElement;
     var read = function () { try { return JSON.parse(localStorage.getItem("consulta:theme") || "null"); } catch (e) { return null; } };
-    var pref = read();
-    if (pref === "dark" || pref === "light") root.dataset.theme = pref;
-    var mq = window.matchMedia("(prefers-color-scheme: dark)");
-    var current = function () { var p = read(); return (p === "dark" || p === "light") ? p : (mq.matches ? "dark" : "light"); };
+    var current = function () { return read() === "dark" ? "dark" : "light"; };
+    if (current() === "dark") root.dataset.theme = "dark";
     document.addEventListener("DOMContentLoaded", function () {
       var btn = document.getElementById("theme-toggle");
       if (!btn) return;
@@ -32,13 +31,10 @@
       paint();
       btn.addEventListener("click", function () {
         var next = current() === "dark" ? "light" : "dark";
-        root.dataset.theme = next;
+        if (next === "dark") root.dataset.theme = "dark"; else root.removeAttribute("data-theme");
         try { localStorage.setItem("consulta:theme", JSON.stringify(next)); } catch (e) {}
         paint();
         window.dispatchEvent(new CustomEvent("consulta:themechange", { detail: next }));
-      });
-      mq.addEventListener("change", function () {
-        if (read() == null) { paint(); window.dispatchEvent(new CustomEvent("consulta:themechange")); }
       });
     });
   })();
@@ -249,6 +245,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=16"></script>
+  <script type="module" src="app.js?v=17"></script>
 </body>
 </html>

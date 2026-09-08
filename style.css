@@ -4,6 +4,7 @@
    una ficha técnica. */
 
 :root {
+  color-scheme: light;
   --bg: #f7f8f8;
   --surface: #ffffff;
   --surface-2: #f1f3f4;
@@ -33,26 +34,11 @@
   --focus: 2px solid var(--accent);
 }
 
-/* tokens del modo oscuro. Se aplican por preferencia del SO (salvo que el visitante
-   haya elegido "claro" a mano) y también por elección explícita vía #theme-toggle,
-   que estampa data-theme en <html>. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e0e10;
-    --surface: #161619;
-    --surface-2: #1e1e22;
-    --border: #2a2a30;
-    --border-strong: #3a3a42;
-    --text: #e8e8ea;
-    --muted: #9a9da3;
-    --faint: #6b6e74;
-    --accent: #3fbcd4;
-    --accent-weak: #122a30;
-    --on-accent: #0e0e10; /* el teal claro del modo oscuro pide tinta oscura encima */
-    --error: #e0725c;
-  }
-}
+/* El tema por defecto es SIEMPRE claro ("día"), sin importar la preferencia del SO.
+   El modo oscuro se activa solo por elección explícita vía #theme-toggle, que estampa
+   data-theme="dark" en <html> (y lo persiste en localStorage). */
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0e0e10;
   --surface: #161619;
   --surface-2: #1e1e22;
@@ -63,7 +49,7 @@
   --faint: #6b6e74;
   --accent: #3fbcd4;
   --accent-weak: #122a30;
-  --on-accent: #0e0e10;
+  --on-accent: #0e0e10; /* el teal claro del modo oscuro pide tinta oscura encima */
   --error: #e0725c;
 }
 
@@ -80,6 +66,9 @@ body {
 }
 
 code { font-family: var(--mono); font-size: 0.9em; }
+/* IBM Plex Sans solo se carga en 400 y 600; el énfasis en cuerpo va explícito a 600
+   (SemiBold) en vez de dejar que el navegador sintetice una negrita 700. */
+b, strong { font-weight: 600; }
 
 /* enlaces: color de texto + subrayado tenue (siempre legible); teal al hover/foco. */
 a {

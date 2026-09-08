@@ -110,6 +110,31 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Defecto siempre claro + revisión de tipografía (`?v=17`)
+
+**Tema:** el defecto es **siempre "día"**, sin mirar `prefers-color-scheme`. Se quitó
+el bloque `@media (prefers-color-scheme: dark)`; el oscuro se activa solo por
+`:root[data-theme="dark"]` (elección explícita, persistida). Se agregó
+`color-scheme: light` / `dark` para que los controles nativos (`select`) sigan al
+tema, no al SO.
+
+**Tipografía — auditoría:**
+- **Pesos cargados que no se usaban:** IBM Plex Sans venía en `400;450;500;600`. En
+  todo el CSS, *cada* `font-weight: 500/600` cae en contexto monoespaciado (títulos,
+  tablas, `dt`). Sans solo se usa a **400**. Se recortó la URL a Sans `400;600` — el
+  `600` queda para `b, strong`, ahora explícito (antes el navegador sintetizaba una
+  700 falsa). Dos archivos de fuente menos por carga.
+- IBM Plex Mono `400;500;600`: los tres se usan (cuerpo mono / `fname`,`thead` /
+  títulos). Sin cambios.
+- Stacks de *fallback* (`--mono`, `--sans`): correctos y multiplataforma. `swap` ya
+  estaba. Sin cambio.
+- Descarga de gráfico a SVG: embebe el *nombre* de familia + fallback a `monospace`,
+  no el binario de la fuente. Es lo correcto para un export liviano; un SVG abierto
+  sin IBM Plex usa `monospace` y sigue legible.
+- **Pendiente (P1, cierre offline):** las fuentes son el único fetch externo que
+  queda (Google Fonts). Auto-alojarlas (`@font-face` + woff2 en `vendor/fonts/`)
+  cierra el 100% offline. ~4 archivos woff2 latin (~180–220 KB). No hecho aún.
+
 ### 2026-09-08 — Interruptor día / noche (`?v=16`)
 
 - Botón `#theme-toggle` en la cabecera (arriba a la derecha) en `index.html` y

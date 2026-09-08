@@ -7,18 +7,16 @@
 <meta name="description" content="Definiciones de los términos usados en consulta: formatos de archivo, motor SQL, consultas y estadística del perfilado.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css?v=17">
 <script>
-  /* tema día/noche: una elección explícita (localStorage) gana sobre el SO.
-     Se aplica antes del primer render para no parpadear. Misma lógica que index.html. */
+  /* tema día/noche. Defecto SIEMPRE claro ("día"); oscuro solo si se eligió antes
+     (localStorage). Se aplica antes del primer render. Lógica idéntica a index.html. */
   (function () {
     var root = document.documentElement;
     var read = function () { try { return JSON.parse(localStorage.getItem("consulta:theme") || "null"); } catch (e) { return null; } };
-    var pref = read();
-    if (pref === "dark" || pref === "light") root.dataset.theme = pref;
-    var mq = window.matchMedia("(prefers-color-scheme: dark)");
-    var current = function () { var p = read(); return (p === "dark" || p === "light") ? p : (mq.matches ? "dark" : "light"); };
+    var current = function () { return read() === "dark" ? "dark" : "light"; };
+    if (current() === "dark") root.dataset.theme = "dark";
     document.addEventListener("DOMContentLoaded", function () {
       var btn = document.getElementById("theme-toggle");
       if (!btn) return;
@@ -31,11 +29,11 @@
       paint();
       btn.addEventListener("click", function () {
         var next = current() === "dark" ? "light" : "dark";
-        root.dataset.theme = next;
+        if (next === "dark") root.dataset.theme = "dark"; else root.removeAttribute("data-theme");
         try { localStorage.setItem("consulta:theme", JSON.stringify(next)); } catch (e) {}
         paint();
+        window.dispatchEvent(new CustomEvent("consulta:themechange", { detail: next }));
       });
-      mq.addEventListener("change", function () { if (read() == null) paint(); });
     });
   })();
 </script>
