@@ -66,8 +66,37 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .tagline {
   margin: 0.4rem 0 0;
   color: var(--muted);
-  max-width: 62ch;
+  max-width: 64ch;
 }
+.tagline-sub { margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--faint); }
+abbr[title] { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+
+.qhelp {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  line-height: 1;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  vertical-align: middle;
+}
+.qhelp:hover { color: var(--text); border-color: var(--accent); }
+
+.defs {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.defs code { color: var(--accent); }
 
 main {
   max-width: 960px;
@@ -423,6 +452,38 @@ details.explain pre {
   white-space: pre-wrap;
   margin: 0.7rem 0 0;
   color: var(--text);
+}
+
+/* ---- glosario ---- */
+.glos { padding-top: 0.5rem; }
+.glos section { margin-bottom: 2.25rem; }
+.glos h2 {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border-strong);
+}
+.glos dl { margin: 0; }
+.glos dt {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent);
+  margin-top: 1rem;
+}
+.glos dt:first-child { margin-top: 0; }
+.glos dt code { color: inherit; font-size: 0.95em; }
+.glos dd {
+  margin: 0.25rem 0 0;
+  max-width: 68ch;
+  color: var(--text);
+}
+.glos dd code {
+  background: var(--surface-2);
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--border);
 }
 
 /* ---- pie ---- */

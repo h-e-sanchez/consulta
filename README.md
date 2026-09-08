@@ -14,18 +14,22 @@
 - **Columnar y delimitado.** Ingesta nativa de Parquet (`read_parquet`) y de CSV con
   inferencia de esquema sobre el archivo completo (`read_csv_auto`, `SAMPLE_SIZE=-1`).
 - **Perfilado enriquecido en una pasada.** Por columna: tipo, nulos, ceros,
-  cardinalidad, cuantiles (p05 / mediana / p95), media y desviación; más un desglose
-  de frecuencias de las columnas categóricas.
+  cardinalidad, cuantiles (p05 / mediana / p95), media y desviación — cada métrica
+  con su definición al pasar el cursor — más un desglose de frecuencias de las
+  columnas categóricas.
 - **Editor SQL** en dialecto DuckDB contra la relación `datos`, con **plantillas**
   (exploración → tiempo → avanzado, 3 variaciones cada una) y proyección del
   resultado a CSV.
-- **Asistente de CTEs.** Compone `WITH … AS (…)` a partir de subconsultas nombradas
-  encadenadas y lo inserta en el editor.
+- **Combinar por pasos.** Un asistente arma cadenas de CTEs (`WITH … AS (…)`) a
+  partir de subconsultas nombradas encadenadas; trae 3 ejemplos.
 - **Gráfico.** Barras, línea, multi-serie, área apilada y dispersión, en SVG sin
-  librería de charting.
+  librería de charting. Ejes y serie se derivan del tipo de gráfico y de las
+  columnas del resultado; 3 presets arman consulta + gráfico de un tirón.
 - **Utilidades.** Copiar los nombres de columna al portapapeles; pegar una línea de
   encabezados para armar un `SELECT`.
-- **Sin tooling.** HTML + módulo ES + CSS. Única dependencia de runtime: el bundle
+- **Glosario.** `glosario.html` define en lenguaje llano cada término (CSV, Parquet,
+  CTE, cuantil, WASM…). Nada hace falta saberlo de antemano.
+- **Sin tooling.** HTML + módulos ES + CSS. Única dependencia de runtime: el bundle
   WASM, resuelto desde CDN en el primer arranque y cacheado.
 
 ## Uso

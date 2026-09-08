@@ -109,6 +109,10 @@ async function loadBuffer(name, buffer) {
   await renderPreview();
   await renderProfile();
   buildTemplates();
+  buildCtePresets();
+  buildChartPresets();
+  cteState.length = 0;
+  renderCteList();
   resetQueryPanel();
   $("#sql-editor").value = defaultQuery();
   selectTab("tab-preview");
@@ -235,6 +239,28 @@ async function renderPreview() {
 }
 
 // ---------------------------------------------------------------- perfilado
+const PROFILE_DEFS = {
+  columna: "Nombre de la columna en la relación.",
+  tipo: "Tipo de dato inferido — BIGINT / DOUBLE: números; VARCHAR: texto; DATE / TIMESTAMP: fechas; BOOLEAN: verdadero/falso.",
+  nulos: "Filas sin valor en esta columna.",
+  "%nulos": "Porcentaje de filas sin valor.",
+  distintos: "Valores distintos aproximados (cardinalidad). Alta ≈ identificador; baja ≈ categoría.",
+  "%ceros": "Porcentaje de filas con valor exactamente 0 (solo columnas numéricas).",
+  min: "Valor mínimo.",
+  p05: "Percentil 5: el 5 % de los valores es menor que este (solo numéricas).",
+  mediana: "Percentil 50: la mitad de los valores queda por debajo. Menos sensible a extremos que la media.",
+  p95: "Percentil 95: el 95 % de los valores es menor que este. Muy separado del máximo ⇒ hay valores atípicos.",
+  max: "Valor máximo.",
+  media: "Promedio aritmético.",
+  desv: "Desviación estándar: dispersión típica alrededor de la media.",
+};
+
+function buildProfileDefs() {
+  $("#prof-defs").innerHTML = Object.entries(PROFILE_DEFS)
+    .map(([k, v]) => `<div><code>${k}</code> — ${escapeHtml(v)}</div>`)
+    .join("");
+}
+
 async function renderProfile() {
   const total = state.rowCount || 1;
 
@@ -282,6 +308,13 @@ async function renderProfile() {
     ];
   });
   renderTable($("#profile-table"), columns, rows, { numericCols: detectNumeric(columns, rows) });
+  $("#profile-table")
+    .querySelectorAll("thead th")
+    .forEach((th) => {
+      const d = PROFILE_DEFS[th.textContent];
+      if (d) th.title = d;
+    });
+  buildProfileDefs();
 
   await renderDimensions();
 }
@@ -417,6 +450,65 @@ function defaultQuery() {
 // ---------------------------------------------------------------- asistente de CTEs
 const cteState = [];
 
+// Tres cadenas de ejemplo, parametrizadas al esquema cargado.
+function ctePresets() {
+  const t = state.table;
+  const dim = firstOf((s) => !s.numeric && !s.temporal) || "dim";
+  const num = firstOf((s) => s.numeric) || "valor";
+  const ts = firstOf((s) => s.temporal);
+  const per = ts ? `date_trunc('month', ${qid(ts)})` : null;
+  return [
+    {
+      n: "agregar → filtrar",
+      about: "Un resumen y luego te quedas con lo más grande.",
+      blocks: [
+        { name: "por_dim", body: `SELECT ${qid(dim)} AS dim, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1` },
+        { name: "top5", body: `SELECT * FROM por_dim ORDER BY total DESC LIMIT 5` },
+      ],
+    },
+    ts && {
+      n: "mensual → media móvil",
+      about: "Serie por mes y luego se la suaviza con una ventana de 3.",
+      blocks: [
+        { name: "mensual", body: `SELECT ${per} AS mes, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1` },
+        { name: "suavizado", body: `SELECT mes, total,\n       round(avg(total) OVER (ORDER BY mes ROWS 2 PRECEDING), 2) AS mm3\nFROM mensual` },
+      ],
+    },
+    {
+      n: "base → % → ranking",
+      about: "Tres pasos: totales, participación sobre el total, posición.",
+      blocks: [
+        { name: "base", body: `SELECT ${qid(dim)} AS dim, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1` },
+        { name: "con_pct", body: `SELECT *, round(100.0 * total / sum(total) OVER (), 1) AS pct\nFROM base` },
+        { name: "ranking", body: `SELECT *, rank() OVER (ORDER BY total DESC) AS rk\nFROM con_pct ORDER BY rk` },
+      ],
+    },
+  ].filter(Boolean);
+}
+
+function loadCtePreset(p) {
+  cteState.length = 0;
+  p.blocks.forEach((b) => cteState.push({ ...b }));
+  renderCteList();
+}
+
+function buildCtePresets() {
+  const host = $("#cte-presets");
+  host.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "tpl-group";
+  wrap.innerHTML = `<span class="tpl-title">ejemplos</span>`;
+  for (const p of ctePresets()) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = p.n;
+    b.title = p.about;
+    b.addEventListener("click", () => loadCtePreset(p));
+    wrap.appendChild(b);
+  }
+  host.appendChild(wrap);
+}
+
 function renderCteList() {
   const host = $("#cte-list");
   host.innerHTML = "";
@@ -546,45 +638,128 @@ function pasteHeaders() {
 // ---------------------------------------------------------------- gráfico
 const CHART_TYPES = ["barras", "linea", "multi", "area", "scatter"];
 
+function colKinds(grid) {
+  const numeric = detectNumeric(grid.columns, grid.rows);
+  const temporal = grid.columns.map(
+    (c, i) => state.schema.find((s) => s.name === c)?.temporal || grid.rows.some((r) => r[i] instanceof Date)
+  );
+  return { numeric, temporal };
+}
+
 function syncChartControls() {
   const grid = state.lastResult;
-  const xSel = $("#chart-x");
-  const ySel = $("#chart-y");
-  const sSel = $("#chart-series");
+  const [xSel, ySel, sSel] = [$("#chart-x"), $("#chart-y"), $("#chart-series")];
   [xSel, ySel, sSel].forEach((s) => (s.innerHTML = ""));
   if (!grid) return;
-
   sSel.add(new Option("— ninguna —", "-1"));
   grid.columns.forEach((c, i) => {
     xSel.add(new Option(c, i));
     ySel.add(new Option(c, i));
     sSel.add(new Option(c, i));
   });
-
-  const numericByIdx = detectNumeric(grid.columns, grid.rows);
-  const temporalByIdx = grid.columns.map((c) =>
-    state.schema.find((s) => s.name === c)?.temporal || grid.rows.some((r) => r[grid.columns.indexOf(c)] instanceof Date)
-  );
-  const xi = temporalByIdx.findIndex(Boolean) >= 0 ? temporalByIdx.findIndex(Boolean) : numericByIdx.findIndex((n) => !n);
-  const yi = numericByIdx.findIndex((n) => n);
-  xSel.value = String(xi >= 0 ? xi : 0);
-  ySel.value = String(yi >= 0 ? yi : Math.min(1, grid.columns.length - 1));
-  sSel.value = "-1";
+  deriveChartDefaults();
   updateChartUiState();
   drawChart();
+}
+
+// Elige X / Y / serie según el tipo de gráfico y los tipos de columna del resultado.
+function deriveChartDefaults() {
+  const grid = state.lastResult;
+  if (!grid) return;
+  const type = $("#chart-type").value;
+  const { numeric, temporal } = colKinds(grid);
+  let xi, yi;
+  if (type === "scatter") {
+    xi = numeric.findIndex(Boolean);
+    yi = numeric.findIndex((n, i) => n && i !== xi);
+  } else {
+    xi = temporal.findIndex(Boolean);
+    if (xi < 0) xi = numeric.findIndex((n) => !n);
+    yi = numeric.findIndex((n) => n);
+  }
+  $("#chart-x").value = String(xi >= 0 ? xi : 0);
+  $("#chart-y").value = String(yi >= 0 ? yi : Math.min(1, grid.columns.length - 1));
+  if (type === "multi" || type === "area") {
+    const si = grid.columns.findIndex((c, i) => !numeric[i] && !temporal[i] && i !== xi && i !== yi);
+    $("#chart-series").value = si >= 0 ? String(si) : "-1";
+  } else {
+    $("#chart-series").value = "-1";
+  }
 }
 
 function updateChartUiState() {
   const type = $("#chart-type").value;
   const needsSeries = type === "multi" || type === "area";
   $("#chart-series-wrap").hidden = !needsSeries;
-  // Al pasar a multi/área sin serie elegida, tomar la primera columna categórica.
-  if (needsSeries && $("#chart-series").value === "-1" && state.lastResult) {
-    const cand = state.lastResult.columns.findIndex(
-      (c, i) => i !== Number($("#chart-x").value) && i !== Number($("#chart-y").value)
-    );
-    if (cand >= 0) $("#chart-series").value = String(cand);
+  const note = $("#chart-note");
+  if (needsSeries && $("#chart-series").value === "-1") {
+    note.textContent = "Sin columna de serie: el resultado no tiene una categoría para separar. Elige otra columna o cambia la consulta.";
+    note.hidden = false;
+  } else {
+    note.hidden = true;
   }
+}
+
+// ---------------------------------------------------------------- presets de gráfico
+function chartPresets() {
+  const t = state.table;
+  const dim = firstOf((s) => !s.numeric && !s.temporal);
+  const num = firstOf((s) => s.numeric) || "1";
+  const ts = firstOf((s) => s.temporal);
+  const per = ts ? `date_trunc('month', ${qid(ts)})` : null;
+  const out = [];
+  if (ts)
+    out.push({
+      n: "serie de tiempo",
+      type: "linea",
+      sql: `SELECT ${per} AS mes, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1 ORDER BY 1;`,
+    });
+  if (ts && dim)
+    out.push({
+      n: "composición en el tiempo",
+      type: "area",
+      sql: `SELECT ${per} AS mes, ${qid(dim)} AS ${dim}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1, 2 ORDER BY 1;`,
+    });
+  if (dim)
+    out.push({
+      n: "comparar dimensiones",
+      type: "barras",
+      sql: `SELECT ${qid(dim)} AS ${dim}, sum(${qid(num)}) AS total\nFROM ${t}\nGROUP BY 1 ORDER BY total DESC;`,
+    });
+  const nums = state.schema.filter((s) => s.numeric);
+  if (nums.length >= 2 && out.length < 3)
+    out.push({
+      n: "dispersión",
+      type: "scatter",
+      sql: `SELECT ${qid(nums[0].name)}, ${qid(nums[1].name)}\nFROM ${t} LIMIT 3000;`,
+    });
+  return out.slice(0, 3);
+}
+
+async function loadChartPreset(p) {
+  $("#sql-editor").value = p.sql;
+  await runQuery();
+  $("#chart-type").value = p.type;
+  deriveChartDefaults();
+  updateChartUiState();
+  drawChart();
+  selectTab("tab-chart");
+}
+
+function buildChartPresets() {
+  const host = $("#chart-presets");
+  host.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "tpl-group";
+  wrap.innerHTML = `<span class="tpl-title">presets</span>`;
+  for (const p of chartPresets()) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = p.n;
+    b.addEventListener("click", () => loadChartPreset(p));
+    wrap.appendChild(b);
+  }
+  host.appendChild(wrap);
 }
 
 function drawChart() {
@@ -945,13 +1120,24 @@ $("#headers-in").addEventListener("keydown", (e) => {
 });
 
 $("#chart-type").addEventListener("change", () => {
+  deriveChartDefaults();
   updateChartUiState();
   drawChart();
 });
-["#chart-x", "#chart-y", "#chart-series"].forEach((s) => $(s).addEventListener("change", drawChart));
+["#chart-x", "#chart-y", "#chart-series"].forEach((s) =>
+  $(s).addEventListener("change", () => {
+    updateChartUiState();
+    drawChart();
+  })
+);
 
 $("#cte-add").addEventListener("click", addCte);
 $("#cte-compose").addEventListener("click", composeCte);
+
+$("#prof-help").addEventListener("click", () => {
+  const d = $("#prof-defs");
+  d.hidden = !d.hidden;
+});
 
 $("#synth-btn").addEventListener("click", async (e) => {
   const btn = e.currentTarget;

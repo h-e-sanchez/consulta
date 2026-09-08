@@ -8,12 +8,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <header class="site-header">
     <h1>consulta</h1>
-    <p class="tagline">SQL sobre CSV y Parquet, ejecutado en el cliente. Sin backend, sin ingesta, sin que el archivo salga del navegador.</p>
+    <p class="tagline">Explora una tabla de datos con consultas <abbr title="Structured Query Language: el lenguaje estándar para consultar datos">SQL</abbr>,
+      dentro del navegador. Acepta archivos <abbr title="valores separados por comas: una tabla en texto plano">CSV</abbr>
+      y <abbr title="formato de archivo columnar comprimido, habitual en analítica de datos">Parquet</abbr>;
+      el archivo no se sube a ningún servidor.</p>
+    <p class="tagline-sub">¿Términos nuevos? <a href="glosario.html">Glosario</a>.</p>
   </header>
 
   <main>
@@ -86,8 +90,12 @@
 
       <!-- Perfilado -->
       <div class="panel" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
-        <h2>Perfilado de columnas</h2>
-        <p class="hint">Tipo, nulos, ceros, cardinalidad y cuantiles (p05 / mediana / p95) en una pasada.</p>
+        <h2>Perfilado de columnas
+          <button type="button" class="qhelp" id="prof-help" aria-label="Qué significa cada columna">?</button>
+        </h2>
+        <p class="hint">Tipo, nulos, ceros, cardinalidad y cuantiles (p05 / mediana / p95) en una pasada.
+          Pasa el cursor por cada encabezado para ver su definición.</p>
+        <div id="prof-defs" class="defs" hidden></div>
         <div class="table-scroll"><table id="profile-table"></table></div>
         <h3>Desglose por dimensión</h3>
         <div id="dim-breakdown" class="dim-grid"></div>
@@ -118,9 +126,13 @@
 
       <!-- Combinar (asistente de CTEs) -->
       <div class="panel" id="panel-combinar" role="tabpanel" aria-labelledby="tab-combinar" hidden>
-        <h2>Asistente de CTEs</h2>
-        <p class="hint">Encadena subconsultas nombradas; cada bloque puede leer del anterior. Al
-          componer se arma un <code>WITH … AS (…)</code> y se inserta en el editor SQL.</p>
+        <h2>Combinar consultas por pasos</h2>
+        <p class="hint">Una consulta larga se puede partir en pasos. Cada bloque tiene un nombre y
+          una consulta; los bloques siguientes pueden leer del anterior por ese nombre. Al
+          <strong>componer</strong> se juntan en una sola sentencia
+          (<a href="glosario.html#cte"><code>WITH … AS (…)</code></a>, un «CTE») y se ejecuta.
+          Carga un ejemplo para ver la mecánica.</p>
+        <div id="cte-presets" class="templates"></div>
         <div id="cte-list" class="cte-list"></div>
         <div class="sql-actions">
           <button type="button" class="ghost" id="cte-add">+ bloque</button>
@@ -131,7 +143,9 @@
       <!-- Gráfico -->
       <div class="panel" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
         <h2>Gráfico</h2>
-        <p class="hint">Proyección del último resultado de la pestaña <em>Consulta SQL</em>.</p>
+        <p class="hint">Grafica el último resultado de la pestaña <em>Consulta SQL</em>.
+          Un preset arma la consulta y el gráfico de un tirón.</p>
+        <div id="chart-presets" class="templates"></div>
         <div class="chart-controls">
           <label>tipo
             <select id="chart-type">
@@ -152,6 +166,7 @@
             <select id="chart-series"></select>
           </label>
         </div>
+        <p class="result-meta" id="chart-note" hidden></p>
         <div class="chart-scroll">
           <svg id="result-chart" role="img" aria-label="Gráfico del resultado de la consulta"></svg>
         </div>
@@ -161,9 +176,10 @@
 
   <footer class="site-footer">
     <p><a href="https://github.com/h-e-sanchez">h-e-sanchez</a> ·
+      <a href="glosario.html">glosario</a> ·
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=3"></script>
+  <script type="module" src="app.js?v=4"></script>
 </body>
 </html>

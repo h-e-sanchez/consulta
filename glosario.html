@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>consulta — glosario</title>
+<meta name="description" content="Definiciones de los términos usados en consulta: formatos de archivo, motor SQL, consultas y estadística del perfilado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
+<link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+  <header class="site-header">
+    <h1>glosario</h1>
+    <p class="tagline">Los términos que aparecen en <a href="index.html">consulta</a>, en lenguaje llano.
+      Nada de esto hace falta saberlo de antemano: la herramienta funciona igual.</p>
+  </header>
+
+  <main class="glos">
+    <section>
+      <h2>Formatos y archivos</h2>
+      <dl>
+        <dt id="csv">CSV</dt>
+        <dd><em>Comma-Separated Values</em>. Una tabla guardada como texto plano: una fila por
+          línea, columnas separadas por comas. Lo que exporta cualquier planilla. Fácil de leer,
+          pero sin tipos ni compresión.</dd>
+
+        <dt id="parquet">Parquet</dt>
+        <dd>Un formato de archivo <strong>columnar</strong> y comprimido, estándar en analítica.
+          Guarda cada columna junta (no cada fila), así que leer «solo tres columnas de un archivo
+          enorme» es rápido y barato. Trae los tipos de dato incorporados.</dd>
+
+        <dt id="relacion">relación / tabla</dt>
+        <dd>El conjunto de filas y columnas cargado. En <code>consulta</code> siempre se llama
+          <code>datos</code>: toda consulta SQL lee de ahí.</dd>
+
+        <dt id="esquema">esquema</dt>
+        <dd>La lista de columnas de una relación con su tipo. Se infiere automáticamente al cargar.</dd>
+
+        <dt id="tipo">tipo de dato</dt>
+        <dd><code>BIGINT</code> y <code>DOUBLE</code>: números (entero y decimal).
+          <code>VARCHAR</code>: texto. <code>DATE</code>: fecha. <code>TIMESTAMP</code>: fecha y hora.
+          <code>BOOLEAN</code>: verdadero/falso.</dd>
+
+        <dt id="nulo">nulo</dt>
+        <dd>Ausencia de valor en una celda — distinto de cero o de texto vacío. En SQL se compara
+          con <code>IS NULL</code>, no con <code>= NULL</code>.</dd>
+
+        <dt id="dimension">dimensión vs. medida</dt>
+        <dd>Una <strong>dimensión</strong> es una columna por la que agrupas o filtras (categoría,
+          región, mes). Una <strong>medida</strong> es un número que sumas o promedias (monto,
+          cantidad). El gráfico usa una de cada una.</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>El motor</h2>
+      <dl>
+        <dt id="sql">SQL</dt>
+        <dd><em>Structured Query Language</em>. El lenguaje estándar para consultar datos tabulares.
+          Una consulta describe <em>qué</em> querés (columnas, filtros, agrupaciones) y el motor
+          resuelve el <em>cómo</em>.</dd>
+
+        <dt id="dialecto">dialecto</dt>
+        <dd>Cada motor SQL tiene variaciones. <code>consulta</code> usa el <strong>dialecto de
+          DuckDB</strong>, que agrega comodidades como <code>SUMMARIZE</code>, <code>PIVOT</code> y
+          <code>date_trunc</code>.</dd>
+
+        <dt id="duckdb">DuckDB / DuckDB-WASM</dt>
+        <dd>DuckDB es una base de datos analítica que corre embebida (sin servidor).
+          <strong>DuckDB-WASM</strong> es su versión compilada a <a href="#wasm">WebAssembly</a>: el
+          mismo motor, corriendo dentro del navegador.</dd>
+
+        <dt id="wasm">WebAssembly (WASM)</dt>
+        <dd>Un formato binario que el navegador ejecuta casi a velocidad nativa. Permite llevar
+          software escrito en C++ o Rust —como DuckDB— a una página web.</dd>
+
+        <dt id="worker">Web Worker</dt>
+        <dd>Un hilo de ejecución aparte del de la página. El motor SQL corre ahí para que una
+          consulta pesada no congele la interfaz.</dd>
+
+        <dt id="cliente">en el cliente / client-side</dt>
+        <dd>Todo el procesamiento ocurre en tu equipo, en el navegador. El archivo que cargás no
+          se sube a ningún servidor. «Sin backend» dice lo mismo: no hay un servidor haciendo el
+          trabajo.</dd>
+
+        <dt id="olap">OLAP</dt>
+        <dd><em>Online Analytical Processing</em>: consultas de análisis (agregar, agrupar, cruzar
+          muchas filas) en oposición a las de un sistema transaccional (insertar/actualizar
+          registros de a uno).</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Consultas</h2>
+      <dl>
+        <dt id="cte">CTE — <code>WITH … AS (…)</code></dt>
+        <dd><em>Common Table Expression</em>. Un resultado intermedio con nombre, definido al
+          inicio de la consulta, que el resto puede usar como si fuera una tabla. Sirve para partir
+          una consulta larga en pasos legibles. La pestaña <strong>Combinar</strong> arma estas
+          cadenas.</dd>
+
+        <dt id="ventana">función de ventana</dt>
+        <dd>Un cálculo sobre un conjunto de filas «vecinas» sin colapsarlas en una sola
+          (<code>OVER (…)</code>). Ejemplos: media móvil, acumulado, ranking, variación contra la
+          fila anterior.</dd>
+
+        <dt id="summarize"><code>SUMMARIZE</code></dt>
+        <dd>Comando de DuckDB que perfila toda la relación de una pasada: por columna devuelve tipo,
+          rango, cardinalidad y estadística. Es la base de la pestaña <strong>Perfilado</strong>.</dd>
+
+        <dt id="pivot"><code>PIVOT</code></dt>
+        <dd>Convierte valores de una columna en columnas nuevas. De «mes, segmento, total» (largo)
+          a «mes, A, B, C, …» (ancho).</dd>
+
+        <dt id="date_trunc"><code>date_trunc</code></dt>
+        <dd>Recorta una fecha a una unidad: <code>date_trunc('month', fecha)</code> lleva toda
+          fecha al primer día de su mes. Es como se agrupa una serie por periodo.</dd>
+
+        <dt id="media-movil">media móvil</dt>
+        <dd>El promedio de los últimos N periodos, recalculado en cada punto. Suaviza el ruido de
+          una serie para ver la tendencia.</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Estadística del perfilado</h2>
+      <dl>
+        <dt id="cardinalidad">cardinalidad / valores distintos</dt>
+        <dd>Cuántos valores diferentes tiene una columna. Alta (cerca del total de filas) sugiere un
+          identificador; baja sugiere una categoría. El perfilado la estima de forma aproximada
+          para que sea rápida.</dd>
+
+        <dt id="cuantil">cuantil / percentil</dt>
+        <dd>El percentil <em>p</em> es el valor por debajo del cual queda el <em>p</em> % de los
+          datos. El <strong>p50</strong> (mediana) parte los datos a la mitad; el <strong>p95</strong>
+          deja el 5 % más alto por encima.</dd>
+
+        <dt id="mediana">mediana (p50)</dt>
+        <dd>El valor del medio. A diferencia del promedio, no se mueve si hay unos pocos valores
+          extremos — por eso conviene mirar las dos.</dd>
+
+        <dt id="media">media / promedio</dt>
+        <dd>La suma de los valores dividida por la cantidad.</dd>
+
+        <dt id="desviacion">desviación estándar</dt>
+        <dd>Cuánto se aleja un valor típico de la media. Chica = datos concentrados; grande =
+          dispersos.</dd>
+
+        <dt id="outlier">valor atípico (outlier)</dt>
+        <dd>Un valor muy alejado del resto. Señal: un p95 mucho menor que el máximo, o una media
+          bastante mayor que la mediana.</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>El generador</h2>
+      <dl>
+        <dt id="sintetico">relación sintética</dt>
+        <dd>Datos inventados por la propia página para probar la herramienta sin traer un archivo.
+          No provienen de ninguna fuente real.</dd>
+
+        <dt id="prng">PRNG / semilla</dt>
+        <dd>El generador usa un <em>generador pseudoaleatorio</em> determinista: la misma
+          <strong>semilla</strong> produce exactamente la misma relación, siempre. Cambiá la semilla
+          para otra muestra con la misma estructura.</dd>
+
+        <dt id="panel">panel</dt>
+        <dd>Datos con dos ejes: varias entidades observadas repetidamente a lo largo del tiempo
+          (entidad × fecha). También se le dice «datos longitudinales».</dd>
+
+        <dt id="serie-tiempo">serie de tiempo</dt>
+        <dd>Una secuencia de valores ordenados por fecha. Casi todo el análisis de
+          <code>consulta</code> gira alrededor de esto.</dd>
+      </dl>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p><a href="index.html">← volver a consulta</a> ·
+      <a href="https://github.com/h-e-sanchez/consulta">código</a></p>
+  </footer>
+</body>
+</html>
