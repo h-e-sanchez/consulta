@@ -7,7 +7,7 @@
 <meta name="description" content="Motor OLAP embebido en el cliente: SQL sobre CSV y Parquet sin backend, sin ingesta, sin que el archivo salga del navegador. Perfilado en una pasada + editor SQL.">
 <link rel="preload" href="vendor/fonts/ibm-plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=22">
 <script>
   /* tema día/noche. El defecto es SIEMPRE claro ("día"), sin mirar la preferencia
      del SO; el modo oscuro se activa solo si el visitante lo eligió antes (guardado
@@ -202,8 +202,9 @@
       <div class="panel" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
         <h2>Gráfico</h2>
         <p class="hint">Grafica la tabla cargada (primeras 20.000 filas) o, si ejecutaste una
-          consulta, su resultado. Los ejes se eligen entre las columnas disponibles; un preset
-          arma la consulta y el gráfico de un tirón.</p>
+          consulta, su resultado. Los ejes se eligen entre las columnas disponibles; los
+          <strong>presets</strong> recomiendan un tipo y unos ejes según las columnas de la relación
+          cargada (no ejecutan SQL).</p>
         <div id="chart-presets" class="templates"></div>
         <div class="chart-controls">
           <label>tipo
@@ -247,6 +248,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=21"></script>
+  <script type="module" src="app.js?v=22"></script>
 </body>
 </html>

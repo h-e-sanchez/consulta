@@ -19,6 +19,7 @@ const state = {
   schema: [],          // [{ name, type, numeric, temporal }]
   rowCount: 0,
   lastResult: null,    // { columns, rows } del último SELECT
+  baseGrid: null,      // el SELECT * de la relación cargada; los presets del gráfico vuelven a él
   workbook: null,      // libro de Excel cargado (para cambiar de hoja sin re-parsear)
   workbookName: "",
   workbookSize: 0,
@@ -213,6 +214,7 @@ async function finishIngest(displayName, sizeBytes, ext, encNote) {
   // El gráfico arranca sobre la tabla recién cargada (una consulta lo reemplaza).
   // Sin esto, los ejes y el SVG quedan con las columnas del dataset anterior.
   state.lastResult = await queryGrid(`SELECT * FROM ${state.table} LIMIT ${CHART_ROW_CAP}`);
+  state.baseGrid = state.lastResult;
   syncChartControls();
   selectTab("tab-preview");
   const wasHidden = workspace.hidden;
@@ -1099,52 +1101,44 @@ function setChartNote(msg) {
 }
 
 // ---------------------------------------------------------------- presets de gráfico
+// Cada preset es una RECOMENDACIÓN de gráfico para la relación cargada: tipo + ejes
+// elegidos según los roles de sus columnas (guessRoles). NO ejecuta SQL, no toca el
+// editor ni cambia de pestaña — solo reconfigura el gráfico sobre la base.
 function chartPresets() {
-  const t = state.table;
-  const { time: ts, measure: num0, dim } = guessRoles(state.schema, state.rowCount);
-  const num = num0 || "1";
-  const per = ts ? `date_trunc('month', ${qid(ts)})` : null;
+  const cols = state.schema;
+  const { time: ts, measure: num, dim } = guessRoles(cols, state.rowCount);
+  const nums = cols.filter((c) => c.numeric && !c.temporal).map((c) => c.name);
+  const y = num || nums[0] || null;
   const out = [];
-  if (ts)
-    out.push({
-      n: "serie de tiempo",
-      type: "linea",
-      sql: `SELECT ${per} AS mes, sum(${qid(num)}) AS total\nFROM ${t}\nWHERE ${qid(ts)} IS NOT NULL\nGROUP BY 1 ORDER BY 1;`,
-    });
-  if (ts && dim)
-    out.push({
-      n: "composición en el tiempo",
-      type: "area",
-      sql: `SELECT ${per} AS mes, ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nWHERE ${qid(dim)} IS NOT NULL AND ${qid(ts)} IS NOT NULL\nGROUP BY 1, 2 ORDER BY 1;`,
-    });
-  if (dim)
-    out.push({
-      n: "comparar dimensiones",
-      type: "barras",
-      sql: `SELECT ${qid(dim)}, sum(${qid(num)}) AS total\nFROM ${t}\nWHERE ${qid(dim)} IS NOT NULL\nGROUP BY 1 ORDER BY total DESC\nLIMIT 30;`,
-    });
-  const nums = state.schema.filter((s) => s.numeric);
+  if (ts && y)
+    out.push({ n: "serie de tiempo", type: "linea", x: ts, y, series: null,
+      about: `Grafica ${y} a lo largo de ${ts}.` });
+  if (ts && y && dim)
+    out.push({ n: "composición en el tiempo", type: "area", x: ts, y, series: dim,
+      about: `Aporte de cada ${dim} al total de ${y} en el tiempo.` });
+  if (dim && y)
+    out.push({ n: "comparar dimensiones", type: "barras", x: dim, y, series: null,
+      about: `Total de ${y} por ${dim}.` });
   if (nums.length >= 2 && out.length < 3)
-    out.push({
-      n: "dispersión",
-      type: "scatter",
-      sql: `SELECT ${qid(nums[0].name)}, ${qid(nums[1].name)}\nFROM ${t} LIMIT 3000;`,
-    });
+    out.push({ n: "dispersión", type: "scatter", x: nums[0], y: nums[1], series: null,
+      about: `${nums[0]} contra ${nums[1]}.` });
   return out.slice(0, 3);
 }
 
-async function loadChartPreset(p) {
-  $("#sql-editor").value = p.sql;
-  if (!(await runQuery())) {
-    // la consulta del preset falló: mostrar el error donde se ve, no dejar un gráfico roto
-    selectTab("tab-query");
-    return;
-  }
+function loadChartPreset(p) {
+  // el gráfico vuelve a la relación cargada (un preset recomienda sobre la base, no
+  // sobre una consulta que el usuario haya ejecutado después)
+  if (state.baseGrid) state.lastResult = state.baseGrid;
+  syncChartControls();
+  const gi = (name) => (name == null ? -1 : state.lastResult.columns.indexOf(name));
   $("#chart-type").value = p.type;
-  deriveChartDefaults();
+  const xi = gi(p.x), yi = gi(p.y), si = gi(p.series);
+  if (xi >= 0) $("#chart-x").value = String(xi);
+  if (yi >= 0) $("#chart-y").value = String(yi);
+  $("#chart-series").value = si >= 0 ? String(si) : "-1";
   updateChartUiState();
+  setZoom(null);
   drawChart();
-  selectTab("tab-chart");
 }
 
 function buildChartPresets() {
@@ -1157,6 +1151,7 @@ function buildChartPresets() {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = p.n;
+    if (p.about) b.title = p.about;
     b.addEventListener("click", () => loadChartPreset(p));
     wrap.appendChild(b);
   }

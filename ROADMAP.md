@@ -111,6 +111,26 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Gráfico: los presets recomiendan sin ejecutar SQL (`?v=22`)
+
+Reporte: al elegir un preset del gráfico «se cambia todo» — sobrescribía el editor
+SQL, corría una consulta de agregación, saltaba de pestaña y renombraba los ejes a
+`mes`/`total`.
+
+- `chartPresets()` ahora devuelve **recomendaciones de configuración**
+  `{ n, type, x, y, series, about }` derivadas de `guessRoles()` sobre las columnas de
+  la **relación cargada** — no SQL.
+- `loadChartPreset()` restaura `state.baseGrid` (el `SELECT *` de la relación),
+  reconfigura tipo + ejes y redibuja. **No toca el editor SQL, no ejecuta nada, no
+  cambia de pestaña.** El propio gráfico agrega al vuelo (suma por categoría).
+- `state.baseGrid` nuevo: copia del `SELECT * LIMIT` que hace `finishIngest`; una
+  consulta del usuario cambia `lastResult` pero `baseGrid` queda de referencia.
+- Los botones de preset llevan `title` en lenguaje llano
+  («Grafica valor a lo largo de periodo.»).
+- Se perdió el rollup diario→mensual que hacía el SQL viejo; para eso están las
+  plantillas de la pestaña Consulta SQL. Un «agrupar X por mes/día» en el gráfico
+  queda como posible mejora.
+
 ### 2026-09-08 — Carga: elegir qué fila es el encabezado (`?v=21`)
 
 Para CSV con filas de título / notas antes de la cabecera real (reportes exportados).
