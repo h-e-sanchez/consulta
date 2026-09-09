@@ -901,8 +901,9 @@ function composeCte() {
     .join(",\n");
   const last = valid[valid.length - 1].name.trim();
   $("#sql-editor").value = `WITH ${withClause}\nSELECT * FROM ${last};`;
-  selectTab("tab-query");
   runQuery();
+  // el editor y el resultado quedan arriba del bloque "Combinar"; llevar la vista ahí
+  $("#sql-editor").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ---------------------------------------------------------------- panel SQL
@@ -1477,7 +1478,7 @@ function downloadChartSvg() {
 }
 
 // ---------------------------------------------------------------- pestañas
-const TABS = ["tab-preview", "tab-profile", "tab-query", "tab-combinar", "tab-chart"];
+const TABS = ["tab-preview", "tab-profile", "tab-query", "tab-chart"];
 function selectTab(id) {
   TABS.forEach((t) => {
     const btn = document.getElementById(t);

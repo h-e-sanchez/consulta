@@ -780,6 +780,13 @@ details.explain pre {
   color: var(--text);
 }
 
+/* "Combinar por pasos" plegado dentro de la pestaña Consulta SQL (modo avanzado) */
+.combine[open] { padding-bottom: 0.95rem; }
+.combine .hint { margin: 0.75rem 0 0; }
+.combine .templates { margin-top: 0.85rem; }
+.combine .cte-list { margin-top: 0.85rem; }
+.combine .sql-actions { margin-top: 0.9rem; }
+
 /* ---- glosario ---- */
 .glos { padding-top: 0.5rem; }
 /* el contenedor sigue a 960px (alineado con la cabecera); el texto se acota a ~46rem */
