@@ -111,16 +111,19 @@ versión vieja unos minutos.
 
 ## Bitácora
 
-### 2026-09-08 — Docs de estilo alineados con `?v=23` + workflow por PR
+### 2026-09-08 — 4 pestañas: «Combinar» pasa a modo avanzado dentro de «Consulta SQL» (`?v=24`)
 
-- `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md` reescritos: describían
-  todavía «Grafito» (gris frío, mono en todo, plano, teal). Ahora reflejan la
-  dirección «técnico cálido / notebook» (`?v=19`) y el acento azul pizarra (`?v=23`):
-  tokens cálidos, reparto sans/mono por rol, escala 15px, `--r`/`--shadow`/`--t`,
-  movimiento (ya hecho), y la restricción de estilo de los briefs de nano banana
-  actualizada (paleta azul pizarra, esquinas de 4px, registro notebook).
-- **Desde acá el trabajo va por PR**, agrupando commits por temática (pedido del
-  dueño). Se sigue bumpeando `?v=N` y anotando esta bitácora.
+- La pestaña **Combinar** (asistente de CTEs) se plegó dentro de la pestaña **Consulta
+  SQL** como un `<details class="explain combine">` colapsado: «Combinar por pasos —
+  modo avanzado». Quedan **4 pestañas**: Vista previa · Perfilado · Consulta SQL ·
+  Gráfico.
+- `TABS` en `app.js` sin `tab-combinar`. El `#panel-combinar` se borró; su contenido
+  (`#cte-presets`, `#cte-list`, `#cte-add`, `#cte-compose`) se movió tal cual — los IDs
+  no cambian, así que `buildCtePresets` / `renderCteList` / `composeCte` siguen igual.
+- `composeCte()` ahora hace `scrollIntoView` del editor tras ejecutar (el resultado
+  queda arriba del bloque plegado).
+- Glosario: el término `cte` apunta al «modo Combinar por pasos» de la pestaña
+  Consulta SQL.
 
 ### 2026-09-08 — Acento: azul pizarra (`?v=23`)
 
