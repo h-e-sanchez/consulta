@@ -5,6 +5,7 @@ sin tráfico saliente, incluso en el primer arranque.
 
 - **`duckdb/`** — el runtime de DuckDB-WASM (motor SQL).
 - **`sheetjs/`** — SheetJS, para leer libros de Excel / ODS.
+- **`fonts/`** — las tipografías IBM Plex (Mono + Sans), subset latin.
 
 ---
 
@@ -76,3 +77,42 @@ lo rechaza como módulo.
 curl -o vendor/sheetjs/xlsx.esm.js https://cdn.sheetjs.com/xlsx-<versión>/package/xlsx.mjs
 node --check vendor/sheetjs/xlsx.esm.js   # el .mjs debe ser ESM auto-contenido (sin imports externos)
 ```
+
+---
+
+## vendor/fonts — tipografías IBM Plex
+
+Las declara `@font-face` al inicio de `style.css`. Sin `@font-face` no hay fallback a
+un CDN — si un archivo falta, el navegador cae al stack de sistema (`Consolas`/`Menlo`
+para mono, `Segoe UI`/`system-ui` para sans), definido en `--mono` / `--sans`.
+
+| archivo | origen | qué es |
+|---|---|---|
+| `ibm-plex-mono-400.woff2` | `fonts.gstatic.com` (subset **latin** del `css2` de Google) | IBM Plex Mono Regular |
+| `ibm-plex-mono-500.woff2` | ídem | IBM Plex Mono Medium (`.fname`, `thead`) |
+| `ibm-plex-mono-600.woff2` | ídem | IBM Plex Mono SemiBold (títulos) |
+| `ibm-plex-sans.woff2` | ídem | IBM Plex Sans **variable** (un archivo cubre 400–600); cuerpo + `b, strong` |
+
+Licencia **SIL Open Font License 1.1** — redistribuir dentro del repo está
+explícitamente permitido.
+
+**Subset:** solo `latin` (`U+0000–00FF` + puntuación tipográfica). Cubre todo el
+español. Los símbolos sueltos de la UI (`→ ∅ ◐ ✓ ≥ ×`) caen a fuente de sistema — IBM
+Plex Mono tampoco los trae, así que no cambia nada.
+
+### Regenerar (al actualizar IBM Plex)
+
+```bash
+mkdir -p vendor/fonts
+UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+# el css2 de Google, con UA moderno, devuelve woff2 agrupados por subset (/* latin */, …)
+curl -s -H "User-Agent: $UA" \
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&display=swap'
+# de la salida, tomar la URL .woff2 que sigue a cada comentario `/* latin */`:
+#   Mono 400 / 500 / 600  → 3 archivos estáticos distintos
+#   Sans 400 y Sans 600   → la MISMA URL (fuente variable) → un solo archivo
+# bajar cada una al nombre de la tabla de arriba y verificar con `file *.woff2`
+```
+
+Optimización futura (no hecha): subset a los ~120 glifos que usa el sitio con
+`pyftsubset` (`fonttools` + `brotli`) → ~8–15 KB por archivo en vez de 14–45 KB.

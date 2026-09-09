@@ -35,22 +35,21 @@ cae en contexto monoespaciado. Sans solo se usa a 400. URL recortada a Sans `400
 (dos archivos menos). El `600` quedó para `b, strong`, ahora explícito en vez de
 negrita 700 sintética. Mono `400;500;600`: los tres se usan, sin cambios.
 
-### ⬜ Auto-alojar IBM Plex — **cierra el 100 % offline** (P0)
-Las fuentes son el **único fetch externo que queda**. Todo el runtime (DuckDB-WASM,
-SheetJS) ya está vendorizado; el sitio marketea «operación aislada» pero baja las woff2
-de `fonts.gstatic.com`.
+### ✅ Auto-alojar IBM Plex — **cierra el 100 % offline** (`?v=18`)
+Las fuentes eran el **único fetch externo que quedaba**. Hecho:
 
-- Bajar los subsets **latin** woff2: Mono 400 / 500 / 600, Sans 400 / 600 (~4–5
-  archivos, ~180–220 KB total).
-- `vendor/fonts/` + un bloque `@font-face` en `style.css` (o en un `fonts.css`
-  aparte). `font-display: swap`.
-- Añadir `size-adjust` / `ascent-override` / `descent-override` por familia para que
-  el fallback tenga las mismas métricas y el `swap` no produzca salto (FOUT).
-- Quitar los dos `<link rel="preconnect">` y el `<link>` de Google Fonts de
-  `index.html` **y** `glosario.html`.
-- Actualizar el README, sección «Operación aislada»: ya **no queda ningún fetch
-  externo**.
-- `.gitattributes`: las woff2 son binarias (`vendor/fonts/** binary`).
+- **4 archivos** en `vendor/fonts/` (subset **latin**, ~89 KB total): Mono 400 / 500 /
+  600 (estáticos) + `ibm-plex-sans.woff2` (**fuente variable**, un archivo cubre
+  400–600). Bloque `@font-face` al inicio de `style.css`, `font-display: swap`.
+- Quitados los dos `<link rel="preconnect">` y el `<link>` de Google Fonts de
+  `index.html` **y** `glosario.html`; agregados 2 `<link rel="preload">` (Mono 400 +
+  Sans) para arrancar la descarga junto con el CSS.
+- **Sin `size-adjust`/`ascent-override`**: las fuentes cargan del mismo origen (sin
+  DNS/TLS), el flash del `swap` es mínimo. Queda como pulido opcional si molesta.
+- `.gitattributes`: `vendor/fonts/** binary`. README «Operación aislada» reescrito
+  (ES + EN): sin fetch externo. `vendor/README.md`: sección + cómo regenerar.
+- Optimización futura documentada: subset a los ~120 glifos usados con `pyftsubset`
+  (~8–15 KB/archivo).
 
 ### ⬜ La escala `--fs-*` está bypasseada (P1)
 `:root` define `--fs-xs … --fs-xl` pero hay **~20 valores `font-size` hardcodeados**
@@ -352,7 +351,7 @@ afectan el runtime).
 
 | Prio | Ítem | Sección |
 |---|---|---|
-| **P0** | Auto-alojar fuentes (cierre offline) | §2 |
+| **P0** | ✅ Auto-alojar fuentes (cierre offline) — `?v=18` | §2 |
 | **P0** | Favicon + `theme-color` | §7.1 |
 | **P0** | Tarjeta OG + meta tags | §7.2 |
 | **P1** | Consolidar la escala tipográfica | §2 |
@@ -367,9 +366,9 @@ afectan el runtime).
 
 ## 9. Verificación (por ítem, al ejecutar)
 
-- **Fuentes:** DevTools → Network en `h-e-sanchez.github.io/consulta` → **cero**
-  peticiones a `fonts.googleapis.com` / `fonts.gstatic.com`. Cortar la red y recargar:
-  el sitio se ve igual. Lighthouse sin regresiones.
+- **Fuentes** ✅ (`?v=18`): verificado — DevTools → Network → **cero** peticiones a
+  `fonts.googleapis.com` / `fonts.gstatic.com`; todas las fuentes salen de
+  `…/consulta/vendor/fonts/`. Con la red cortada el sitio se ve igual.
 - **OG:** pegar la URL de Pages en un validador de vista previa (LinkedIn Post
   Inspector, Slack, X card validator). `docs/og-consulta.png` accesible por HTTPS y
   ≤ 1 MB.

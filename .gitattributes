@@ -2,3 +2,4 @@
 # (el vendor/README.md queda como texto normal)
 vendor/duckdb/** binary
 vendor/sheetjs/** binary
+vendor/fonts/** binary

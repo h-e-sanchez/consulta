@@ -3,6 +3,27 @@
    #5f6368, divisores de 1px, sin sombras), todo plano, un acento teal. Se lee como
    una ficha técnica. */
 
+/* ---- tipografías IBM Plex auto-alojadas (vendor/fonts/, subset latin, licencia OFL) ----
+   El sitio no hace ninguna petición saliente. IBM Plex Mono va en 3 instancias
+   estáticas; IBM Plex Sans es una fuente variable (un archivo cubre 400–600).
+   Regenerar: vendor/README.md. */
+@font-face {
+  font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("vendor/fonts/ibm-plex-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("vendor/fonts/ibm-plex-mono-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("vendor/fonts/ibm-plex-mono-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans"; font-style: normal; font-weight: 400 600; font-display: swap;
+  src: url("vendor/fonts/ibm-plex-sans.woff2") format("woff2");
+}
+
 :root {
   color-scheme: light;
   --bg: #f7f8f8;
@@ -66,8 +87,9 @@ body {
 }
 
 code { font-family: var(--mono); font-size: 0.9em; }
-/* IBM Plex Sans solo se carga en 400 y 600; el énfasis en cuerpo va explícito a 600
-   (SemiBold) en vez de dejar que el navegador sintetice una negrita 700. */
+/* IBM Plex Sans se auto-aloja como fuente variable acotada a 400–600; el énfasis en
+   cuerpo va explícito a 600 (SemiBold) en vez de dejar que el navegador sintetice una
+   negrita 700. */
 b, strong { font-weight: 600; }
 
 /* enlaces: color de texto + subrayado tenue (siempre legible); teal al hover/foco. */

@@ -117,8 +117,10 @@ El primer color siempre es el acento.
 
 ## 3. Tipografía
 
-Dos familias, cargadas desde Google Fonts con `display=swap` (auto-alojarlas es
-pendiente — ver `revision-visual-2026-09.md`):
+Dos familias, **auto-alojadas** en `vendor/fonts/` (subset latin) y declaradas con
+`@font-face` al inicio de `style.css`, `font-display: swap`. IBM Plex Mono va en 3
+instancias estáticas (400/500/600); IBM Plex Sans es una fuente variable (un archivo,
+400–600). Sin fetch externo.
 
 ```css
 --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, Menlo, monospace;
@@ -356,8 +358,8 @@ portafolio:
 
 1. **Copiar tal cual:** el bloque `:root` + `:root[data-theme="dark"]` de `style.css`
    (§2), los tokens `--mono`/`--sans`/`--fs-*`/`--sp-*`/`--focus`.
-2. **Fuentes:** el mismo `<link>` de Google Fonts (`IBM+Plex+Mono:wght@400;500;600` +
-   `IBM+Plex+Sans:wght@400;600`), o el `@font-face` auto-alojado cuando exista.
+2. **Fuentes:** copiar `vendor/fonts/` (4 woff2) + el bloque `@font-face` del inicio de
+   `style.css` + los 2 `<link rel="preload">` del `<head>`. Sin Google Fonts.
 3. **Componentes:** copiar callout, tabla, botón, chip, ring de foco (§5) y el
    `<script>` inline del interruptor de tema.
 4. **Cambiar por repo:** el `<title>`, la `<meta name="description">`, el `og:*`, el

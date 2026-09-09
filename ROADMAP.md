@@ -38,9 +38,9 @@ cada sesión.
       navegador lo rechaza como módulo).
 - [x] Documentado en `README.md`, `glosario.html` (#vendor) y `vendor/README.md`
       (cómo regenerar al subir de versión).
-- [ ] Queda como único fetch externo: las tipografías IBM Plex (Google Fonts,
-      no bloqueante). Auto-alojarlas también sería el cierre completo. **Plan:**
-      `docs/revision-visual-2026-09.md` §2 (P0).
+- [x] **Cierre completo (`?v=18`):** las tipografías IBM Plex también van
+      auto-alojadas (`vendor/fonts/`, subset latin, `@font-face`). El sitio ya **no
+      hace ninguna petición saliente**.
 
 ### ☑ Camino C — Persistencia y perfilado — **hecho 2026-09-08** (`?v=7`)
 
@@ -110,6 +110,25 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-08 — Tipografías IBM Plex auto-alojadas — cierre 100 % offline (`?v=18`)
+
+Era el único fetch externo que quedaba. Ahora `consulta` no hace **ninguna** petición
+saliente.
+
+- **`vendor/fonts/`** — 4 woff2, subset **latin**, ~89 KB: `ibm-plex-mono-400/500/600`
+  (estáticos) + `ibm-plex-sans.woff2` (**fuente variable**, un archivo cubre 400–600).
+  Bajados del `css2` de Google con UA de Chrome. Licencia OFL.
+- **`style.css`** — bloque `@font-face` (×4) al inicio, `font-display: swap`.
+  `--mono`/`--sans` sin cambios (mismos nombres de familia).
+- **`index.html` + `glosario.html`** — fuera los 2 `preconnect` + el `<link>` de
+  Google Fonts; en su lugar 2 `<link rel="preload">` (Mono 400 + Sans) que arrancan la
+  descarga junto con el CSS. `style.css`/`app.js` a `?v=18`.
+- Sin `size-adjust`/`ascent-override`: mismo origen, sin DNS/TLS, el `swap` casi no se
+  nota. Pulido opcional a futuro.
+- `.gitattributes` (`vendor/fonts/** binary`), `vendor/README.md` (sección + regenerar),
+  `README.md` («Operación aislada» ES + EN), `docs/revision-visual-2026-09.md` §2 y
+  `docs/guia-de-estilo.md` §3 actualizados.
 
 ### 2026-09-08 — Documentación de estilo: guía viva + revisión con fecha
 
