@@ -386,9 +386,9 @@ cuando existan. **Todos usan el acento azul pizarra `#33518f` sobre papel tibio.
 |---|---|---|---|
 | **Favicon** | ⬜ pendiente | Marca abstracta, azul pizarra, legible a 16px. | `favicon.svg` en la raíz + `<link rel="icon">` y `<meta name="theme-color" content="#33518f">` en los dos `<head>` |
 | **Tarjeta social (OG)** | ⬜ pendiente | 1200×630. Wordmark `consulta` en Sans + bajada; a la derecha, UI estilizada estilo notebook. Papel tibio, acento azul, esquinas de 4px. ≤ 1 MB. | `docs/og-consulta.png` + `og:image`/`twitter:card`/`og:title`/`og:description` |
-| **Banner de README** | ⬜ pendiente | ~1280×400. Misma familia visual. | `docs/banner.png` en la línea 7 del README (junto a `docs/captura.jpg`) |
+| **Banner de README** | ⬜ pendiente | ~1280×400. Misma familia visual. | `docs/banner.png`, cerca del inicio del README |
 | **Ilustraciones de conceptos** | ⬜ a evaluar | 3 diagramas cuadrados: columnar vs filas · en el cliente · cadena de CTEs. Rotulados en Mono. Generar como referencia y redibujar en SVG, o solo en README. | `docs/glosario/*.svg` |
-| **Captura de producto** | ✅ existe (des­actualizada) | Captura real; hay que **regenerarla** con la dirección `?v=23`. | `docs/captura.jpg` |
+| **GIFs del README** | ⬜ pendiente | 3 recorridos cortos (carga+perfilado · consulta SQL · gráfico), sin overlays, < 3 MB c/u. | `docs/gif/*.gif` + `<img>` en el README |
 
 ---
 

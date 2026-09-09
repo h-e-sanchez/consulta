@@ -138,8 +138,8 @@ la selección** y lista las columnas de esa forma:
 Reusa metadata de `SHAPES` en `app.js`.
 
 ### ⬜ *(opcional)* `<details>` «cómo funciona»
-3 bullets: **cargás** un CSV/Parquet/Excel → `consulta` lo **perfila** en una pasada →
-**consultás** con SQL. Colapsado por defecto.
+3 bullets: **cargas** un CSV/Parquet/Excel → `consulta` lo **perfila** en una pasada →
+**consultas** con SQL. Colapsado por defecto.
 
 ### ⬜ *(opcional)* «agrupar X por mes / día» en el gráfico
 `?v=22` quitó el rollup diario→mensual que hacía el SQL de los presets. Un selector
@@ -278,11 +278,11 @@ Wide margins top and bottom.
 [+ STYLE CONSTRAINTS block]
 ```
 
-**Salida:** PNG 1280×400 (o 2560×800 retina). **Cómo entra:** `docs/banner.png`, en la
-línea 7 del `README.md`, encima de `docs/captura.jpg`.
+**Salida:** PNG 1280×400 (o 2560×800 retina). **Cómo entra:** `docs/banner.png`, cerca
+del inicio del `README.md` (que hoy no tiene imagen — la captura vieja se quitó).
 
 **Aceptación:** cuenta la historia sin texto; se ve bien en el ancho de columna de
-GitHub (~900 px); no compite con la captura real.
+GitHub (~900 px); no compite con los GIFs del recorrido.
 
 ---
 
@@ -344,9 +344,9 @@ bumpeando `?v=N` por cambio de `style.css`/`app.js` y anotando la bitácora del
 | **P2** | Texto explicativo (callout primera-vez + generador) | §6 | ⬜ |
 | **P2** | «agrupar X por mes/día» en el gráfico | §6 | ⬜ |
 | **P2** | Fade de entrada de callouts dinámicos | §5 | ⬜ |
+| **P1** | GIFs del README (3 recorridos cortos) | §7.3 | ⬜ (se hacen a mano) |
 | **P2** | Banner de README | §7.3 | ⬜ |
 | **P2** | Ilustraciones de conceptos | §7.4 | ⬜ |
-| **P2** | Regenerar `docs/captura.jpg` con `?v=23` | — | ⬜ |
 
 ---
 
