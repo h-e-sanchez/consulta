@@ -7,7 +7,7 @@
 <meta name="description" content="Definiciones de los términos usados en consulta: formatos de archivo, motor SQL, consultas y estadística del perfilado.">
 <link rel="preload" href="vendor/fonts/ibm-plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 <script>
   /* tema día/noche. Defecto SIEMPRE claro ("día"); oscuro solo si se eligió antes
      (localStorage). Se aplica antes del primer render. Lógica idéntica a index.html. */
@@ -68,6 +68,13 @@
           <strong>hojas</strong>. <code>consulta</code> lee el libro en el navegador, te deja elegir
           qué hoja importar, y la convierte a una tabla. Cambiar de hoja no vuelve a pedir el
           archivo. La primera fila de la hoja se toma como los nombres de columna.</dd>
+
+        <dt id="encabezado">fila de encabezado</dt>
+        <dd>La fila del archivo que trae los <strong>nombres de las columnas</strong>. Normalmente es
+          la primera, y <code>consulta</code> la detecta sola. Si el CSV trae filas de título o notas
+          antes (reportes exportados, plantillas), usá el control <em>«encabezado: fila N»</em> de la
+          barra de archivo para indicar cuál es: se saltan las anteriores y se relee sin volver a
+          pedir el archivo.</dd>
 
         <dt id="relacion">relación / tabla</dt>
         <dd>El conjunto de filas y columnas cargado. En <code>consulta</code> siempre se llama

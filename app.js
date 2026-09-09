@@ -22,6 +22,7 @@ const state = {
   workbook: null,      // libro de Excel cargado (para cambiar de hoja sin re-parsear)
   workbookName: "",
   workbookSize: 0,
+  ingest: null,        // { virtualName, kind, displayName, ext, encNote, sizeBytes, headerRow } — para releer con otro encabezado
 };
 
 // ---------------------------------------------------------------- referencias DOM
@@ -160,7 +161,34 @@ async function loadBuffer(name, buffer) {
     showError(`No se pudo leer el archivo: ${cleanErr(err)}`);
     return;
   }
+  state.workbook = null;
+  state.ingest = {
+    virtualName,
+    kind: ext === "parquet" ? "parquet" : "csv",
+    displayName: name, ext, encNote, sizeBytes, headerRow: 1,
+  };
   await finishIngest(name, sizeBytes, ext, encNote);
+}
+
+// Relee el CSV/TSV ya registrado tomando la fila `row` como encabezado (salta las
+// anteriores). Para archivos con filas de título antes de la cabecera real.
+async function reingestWithHeader(row) {
+  const ing = state.ingest;
+  if (!ing || ing.kind !== "csv") return;
+  row = Math.max(1, Math.min(50, Math.floor(Number(row)) || 1));
+  ing.headerRow = row;
+  const skip = row - 1;
+  try {
+    await state.conn.query(
+      `CREATE OR REPLACE TABLE ${state.table} AS SELECT * FROM ` +
+      `read_csv_auto('${ing.virtualName}', SAMPLE_SIZE=-1${skip > 0 ? `, skip=${skip}` : ""})`
+    );
+  } catch (err) {
+    showError(`No se pudo releer con el encabezado en la fila ${row}: ${cleanErr(err)}`);
+    return;
+  }
+  fileError.hidden = true;
+  await finishIngest(ing.displayName, ing.sizeBytes, ing.ext, ing.encNote);
 }
 
 // Tail común a todo camino de carga: recuenta filas, refresca el esquema y pinta
@@ -244,7 +272,14 @@ async function selectSheet(sheetName) {
     showError(`No se pudo leer la hoja «${sheetName}»: ${cleanErr(err)}`);
     return;
   }
-  await finishIngest(`${state.workbookName} — ${sheetName}`, state.workbookSize || size, "xlsx");
+  const displayName = `${state.workbookName} — ${sheetName}`;
+  state.ingest = {
+    virtualName: "input.csv",
+    kind: "csv",
+    displayName, ext: "xlsx", encNote: null,
+    sizeBytes: state.workbookSize || size, headerRow: 1,
+  };
+  await finishIngest(displayName, state.workbookSize || size, "xlsx");
 }
 
 async function refreshSchema() {
@@ -273,6 +308,10 @@ function updateFileBar(name, bytes, rows, ext, encNote) {
     `${ext.toUpperCase()} · ${rows.toLocaleString("es-CL")} filas · ` +
     `${state.schema.length} columnas · ${formatBytes(bytes)}` +
     (encNote ? ` · reinterpretado desde ${encNote}` : "");
+  // "encabezado: fila N" solo para texto delimitado (no Parquet, que trae esquema)
+  const canHeader = state.ingest?.kind === "csv";
+  $("#header-row-wrap").hidden = !canHeader;
+  if (canHeader) $("#header-row").value = state.ingest.headerRow;
 }
 
 const qid = (name) => `"${String(name).replace(/"/g, '""')}"`;
@@ -1710,11 +1749,14 @@ $("#wb-reset").addEventListener("click", () => {
   fileInput.value = "";
   state.workbook = null;
   state.workbookName = "";
+  state.ingest = null;
   $("#sheet-pick-wrap").hidden = true;
+  $("#header-row-wrap").hidden = true;
   dropZone.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 $("#copy-cols").addEventListener("click", (e) => copyText(state.schema.map((s) => s.name).join(", "), e.currentTarget));
 $("#sheet-picker").addEventListener("change", (e) => selectSheet(e.target.value));
+$("#header-row").addEventListener("change", (e) => reingestWithHeader(e.target.value));
 
 TABS.forEach((t) => document.getElementById(t).addEventListener("click", () => selectTab(t)));
 

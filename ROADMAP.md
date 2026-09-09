@@ -111,6 +111,20 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Carga: elegir qué fila es el encabezado (`?v=21`)
+
+Para CSV con filas de título / notas antes de la cabecera real (reportes exportados).
+
+- Control **«encabezado: fila N»** en la barra de archivo (solo texto delimitado, no
+  Parquet). Al cambiarlo, `reingestWithHeader()` relee el archivo **ya registrado** en
+  DuckDB con `read_csv_auto(..., skip=N-1)` — sin volver a pedir el archivo.
+- `state.ingest` guarda `{ virtualName, kind, displayName, ext, encNote, sizeBytes,
+  headerRow }`; lo setean `loadBuffer` (CSV/Parquet) y `selectSheet` (Excel). Se limpia
+  en «Cargar otro».
+- `read_csv_auto` ya salta bastante basura solo; el control es para cuando su
+  detección falla. Verificado: skip=1/3, vuelta a fila 1, hoja de Excel.
+- Glosario: término «fila de encabezado».
+
 ### 2026-09-08 — Gráfico: títulos de eje + eje X consciente de fechas (`?v=20`)
 
 - **Títulos de eje.** El nombre de la columna del eje X va centrado abajo; el del eje

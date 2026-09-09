@@ -375,6 +375,16 @@ main {
   color: var(--muted);
 }
 #sheet-picker { font-size: 0.74rem; padding: 0.2rem 1.7rem 0.2rem 0.4rem; text-transform: none; letter-spacing: normal; }
+#header-row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+#header-row { width: 3.2rem; font-size: 0.74rem; padding: 0.2rem 0.4rem; text-transform: none; letter-spacing: normal; }
 
 /* ---- pestañas ---- */
 .tabs {
@@ -637,7 +647,7 @@ tbody tr:last-child td { border-bottom: none; }
 .result-meta.err { color: var(--error); white-space: pre-wrap; }
 
 /* ---- controles ---- */
-select, button, input[type="text"] {
+select, button, input[type="text"], input[type="number"] {
   font-family: var(--sans);
   font-size: var(--fs-sm);
   padding: 0.4rem 0.55rem;
