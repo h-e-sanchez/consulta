@@ -111,6 +111,17 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Docs de estilo alineados con `?v=23` + workflow por PR
+
+- `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md` reescritos: describían
+  todavía «Grafito» (gris frío, mono en todo, plano, teal). Ahora reflejan la
+  dirección «técnico cálido / notebook» (`?v=19`) y el acento azul pizarra (`?v=23`):
+  tokens cálidos, reparto sans/mono por rol, escala 15px, `--r`/`--shadow`/`--t`,
+  movimiento (ya hecho), y la restricción de estilo de los briefs de nano banana
+  actualizada (paleta azul pizarra, esquinas de 4px, registro notebook).
+- **Desde acá el trabajo va por PR**, agrupando commits por temática (pedido del
+  dueño). Se sigue bumpeando `?v=N` y anotando esta bitácora.
+
 ### 2026-09-08 — Acento: azul pizarra (`?v=23`)
 
 Segunda evaluación de paleta, esta vez apuntando al perfil del dueño (portafolio de
@@ -194,8 +205,8 @@ demasiado *fome*. Se pivotó a un registro de **cuaderno analítico moderno**:
 - **Selects nativos** con chevron propio (antes se veía el widget crudo del SO).
 - Sin fuentes nuevas — sigue 100 % offline. Estructura y acento intactos.
 
-Pendiente: actualizar `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md`
-(los ítems P1 de escala tipográfica y movimiento quedaron hechos acá).
+(Los docs `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md` quedaron
+alineados con esta dirección en el commit de docs del 2026-09-08.)
 
 ### 2026-09-08 — Tipografías IBM Plex auto-alojadas — cierre 100 % offline (`?v=18`)
 
