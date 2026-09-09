@@ -7,7 +7,7 @@
 <meta name="description" content="Un cuaderno en el navegador para mirar una tabla de datos: la perfilas, la consultas con SQL y la graficas. Acepta CSV, Parquet y Excel — sin backend y sin que el archivo se transmita.">
 <link rel="preload" href="vendor/fonts/ibm-plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="style.css?v=25">
 <script>
   /* tema día/noche. El defecto es SIEMPRE claro ("día"), sin mirar la preferencia
      del SO; el modo oscuro se activa solo si el visitante lo eligió antes (guardado
@@ -222,6 +222,15 @@
           <label>eje Y
             <select id="chart-y"></select>
           </label>
+          <label id="chart-agg-wrap">agregación
+            <select id="chart-agg">
+              <option value="sum" selected>suma</option>
+              <option value="count">conteo</option>
+              <option value="avg">promedio</option>
+              <option value="min">mínimo</option>
+              <option value="max">máximo</option>
+            </select>
+          </label>
           <label id="chart-series-wrap" hidden>serie
             <select id="chart-series"></select>
           </label>
@@ -248,6 +257,6 @@
       ejecución en el cliente vía DuckDB-WASM; el archivo no se transmite.</p>
   </footer>
 
-  <script type="module" src="app.js?v=24"></script>
+  <script type="module" src="app.js?v=25"></script>
 </body>
 </html>
