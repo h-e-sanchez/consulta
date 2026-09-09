@@ -1,8 +1,8 @@
 # consulta
 
-> Motor OLAP embebido en el cliente para inspección exploratoria de datos tabulares:
-> SQL sobre CSV y Parquet sin backend, sin ingesta y sin que el archivo abandone el
-> navegador.
+> *Un cuaderno de análisis que corre entero en el navegador: perfilá, consultá con SQL
+> y graficá una tabla de datos —CSV, Parquet o Excel— sin backend, sin ingesta y sin
+> que el archivo abandone tu equipo.*
 
 ![consulta — editor SQL y perfilado sobre una relación sintética](docs/captura.jpg)
 
