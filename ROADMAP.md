@@ -111,6 +111,23 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Acento: azul pizarra (`?v=23`)
+
+Segunda evaluación de paleta, esta vez apuntando al perfil del dueño (portafolio de
+control de gestión / FP&A). Sobre una página de comparación (teal actual vs azul
+pizarra vs verde petróleo, en la dirección «notebook»), se eligió **azul pizarra**:
+registro de finanzas / consultoría, reconocible para un reclutador del área.
+
+- `--accent` `#33518f` (claro) / `#8aa9e6` (oscuro). `--accent-weak` `#e7ebf5` /
+  `#1a2338`. `--on-accent` sin cambios (`#fff` / `#16140f` — el azul claro del modo
+  noche pide tinta oscura encima).
+- Contraste: 6.7 sobre `--bg`, 6.1 sobre `--surface-2`, 6.9 texto blanco encima
+  (claro); ≥7.6 en oscuro. AA holgado.
+- **El teal retirado pasa a ser color de rol**: `.sc-group[data-kind="temporal"]`
+  usa `#0f6d80` (antes violeta `#8a7cae`). Roles del esquema ahora: teal (fecha),
+  azul (medida), verde (dimensión), gris (id) — cuatro tonos distintos.
+- Neutrales cálidos, formas y tipografía de `?v=19` sin cambios.
+
 ### 2026-09-08 — Gráfico: los presets recomiendan sin ejecutar SQL (`?v=22`)
 
 Reporte: al elegir un preset del gráfico «se cambia todo» — sobrescribía el editor

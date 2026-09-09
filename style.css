@@ -1,7 +1,8 @@
 /* consulta — dirección "Técnico cálido / notebook": papel tibio, sans humanista para
    la interfaz y los títulos, monoespaciado reservado para datos y código, escala
    tipográfica con contraste, esquinas de 4px y una sombra apenas perceptible en las
-   superficies elevadas. Un acento teal. Registro de cuaderno analítico moderno. */
+   superficies elevadas. Un acento azul pizarra (registro de finanzas / control de
+   gestión). Cuaderno analítico moderno. */
 
 /* ---- tipografías IBM Plex auto-alojadas (vendor/fonts/, subset latin, licencia OFL) ----
    El sitio no hace ninguna petición saliente. IBM Plex Mono va en 3 instancias
@@ -34,8 +35,8 @@
   --text: #23211c;        /* tinta cálida */
   --muted: #6a6357;
   --faint: #978f7e;
-  --accent: #0f6d80;      /* teal — sobre papel tibio lee analítico, no frío */
-  --accent-weak: #e3eef0;
+  --accent: #33518f;      /* azul pizarra — registro de finanzas / control de gestión, sobre papel tibio */
+  --accent-weak: #e7ebf5;
   --on-accent: #ffffff;
   --error: #b23c26;
 
@@ -72,8 +73,8 @@
   --text: #ece7db;
   --muted: #a89f8c;
   --faint: #776f5e;
-  --accent: #3fbcd4;
-  --accent-weak: #15282d;
+  --accent: #8aa9e6;      /* azul pizarra claro; el tono oscuro pide tinta oscura encima (--on-accent) */
+  --accent-weak: #1a2338;
   --on-accent: #16140f;
   --error: #e0765c;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 2px 8px rgb(0 0 0 / 0.2);
@@ -97,7 +98,7 @@ code { font-family: var(--mono); font-size: 0.88em; }
    negrita 700. */
 b, strong { font-weight: 600; }
 
-/* enlaces: color de texto + subrayado tenue (siempre legible); teal al hover/foco. */
+/* enlaces: color de texto + subrayado tenue (siempre legible); acento al hover/foco. */
 a {
   color: inherit;
   text-decoration-line: underline;
@@ -169,7 +170,7 @@ summary:focus-visible { outline: var(--focus); outline-offset: 2px; }
 }
 .tagline-sub { margin: 0.5rem 0 0; font-size: var(--fs-sm); color: var(--faint); }
 abbr[title] { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
-/* siglas del subtítulo enlazadas al glosario: teal (acento deliberado, pasa AA),
+/* siglas del subtítulo enlazadas al glosario: color de acento (deliberado, pasa AA),
    sin subrayado del enlace — el abbr ya trae su punteado */
 .tagline a { text-decoration: none; color: var(--accent); }
 .tagline a abbr { color: inherit; cursor: pointer; }
@@ -539,7 +540,7 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 0.6rem 0.75rem;
   box-shadow: var(--shadow);
 }
-.sc-group[data-kind="temporal"] { border-left-color: #8a7cae; }
+.sc-group[data-kind="temporal"] { border-left-color: #0f6d80; }
 .sc-group[data-kind="medida"] { border-left-color: var(--accent); }
 .sc-group[data-kind="dimension"] { border-left-color: #7d9a6f; }
 .sc-group[data-kind="id"] { border-left-color: var(--faint); }
