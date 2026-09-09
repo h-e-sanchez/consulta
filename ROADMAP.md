@@ -2,7 +2,7 @@
 
 Estado al **2026-09-08**. El sitio está en vivo
 ([`h-e-sanchez.github.io/consulta`](https://h-e-sanchez.github.io/consulta/)) y
-funcional. Este archivo se edita a mano: marcá las casillas y elegí el camino de
+funcional. Este archivo se edita a mano: marca las casillas y elige el camino de
 cada sesión.
 
 ---
@@ -110,6 +110,17 @@ versión vieja unos minutos.
 ---
 
 ## Bitácora
+
+### 2026-09-09 — Español de Chile + limpieza del README
+
+- **Voseo → tuteo.** Los textos habían salido en voseo rioplatense (`cargás`,
+  `consultás`, `graficás`, `podés`, `querés`, `elegí`, `usá`). El equipo es chileno →
+  todo el copy pasa a tuteo estándar (`cargas`, `consultas`, `puedes`, `elige`, `usa`).
+  Tocó `index.html` (tagline + `<meta description>`), `glosario.html`, `README.md`
+  (bajada), `ROADMAP.md`, `docs/revision-visual-2026-09.md`.
+- **README:** se quitó la imagen `docs/captura.jpg` (desactualizada, del diseño
+  «Grafito») y el archivo. La reemplazan 3 GIFs cortos del recorrido, que se hacen a
+  mano (ScreenToGif) — ver `docs/revision-visual-2026-09.md` §7.3.
 
 ### 2026-09-08 — 4 pestañas: «Combinar» pasa a modo avanzado dentro de «Consulta SQL» (`?v=24`)
 

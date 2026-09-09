@@ -1,10 +1,8 @@
 # consulta
 
-> *Un cuaderno de análisis que corre entero en el navegador: perfilá, consultá con SQL
-> y graficá una tabla de datos —CSV, Parquet o Excel— sin backend, sin ingesta y sin
+> *Un cuaderno de análisis que corre entero en el navegador: perfila, consulta con SQL
+> y grafica una tabla de datos —CSV, Parquet o Excel— sin backend, sin ingesta y sin
 > que el archivo abandone tu equipo.*
-
-![consulta — editor SQL y perfilado sobre una relación sintética](docs/captura.jpg)
 
 ## Diseño
 
