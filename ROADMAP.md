@@ -208,8 +208,8 @@ demasiado *fome*. Se pivotó a un registro de **cuaderno analítico moderno**:
 - **Selects nativos** con chevron propio (antes se veía el widget crudo del SO).
 - Sin fuentes nuevas — sigue 100 % offline. Estructura y acento intactos.
 
-Pendiente: actualizar `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md`
-(los ítems P1 de escala tipográfica y movimiento quedaron hechos acá).
+(Los docs `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md` quedaron
+alineados con esta dirección en el commit de docs del 2026-09-08.)
 
 ### 2026-09-08 — Tipografías IBM Plex auto-alojadas — cierre 100 % offline (`?v=18`)
 
