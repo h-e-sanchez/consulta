@@ -111,6 +111,28 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Nueva dirección visual: «técnico cálido / notebook» (`?v=19`)
+
+El dueño del repo encontró la identidad «Grafito» (plana, gris, mono en todo)
+demasiado *fome*. Se pivotó a un registro de **cuaderno analítico moderno**:
+
+- **Tipografía por rol.** IBM Plex **Sans** para toda la interfaz y los títulos;
+  IBM Plex **Mono** reservado a datos, SQL y código (tabla, editor, nombres de
+  columna/archivo, chips de esquema, `code`, `dt` del glosario). El `h1` pasa de mono
+  1.5rem a sans 2rem con tracking ajustado.
+- **Paleta cálida.** Papel tibio `#fbfaf7` (antes `#f7f8f8` frío), grises y tinta
+  cálidos; oscuro `#16140f`. El acento teal no cambia.
+- **Formas.** Esquinas de 4px (`--r`) y una sombra apenas perceptible (`--shadow`) en
+  las superficies elevadas (drop-zone, tablas, celdas de esquema). Antes: todo a 0.
+- **Escala.** Base 15px, ratio ~1.25, más contraste entre `h1`/`h2`/cuerpo.
+- **Movimiento.** Micro-transiciones ≤130ms (`--t`) en hover/foco; `#workspace` y los
+  paneles entran con un fade corto; `@media (prefers-reduced-motion: reduce)` global.
+- **Selects nativos** con chevron propio (antes se veía el widget crudo del SO).
+- Sin fuentes nuevas — sigue 100 % offline. Estructura y acento intactos.
+
+Pendiente: actualizar `docs/guia-de-estilo.md` y `docs/revision-visual-2026-09.md`
+(los ítems P1 de escala tipográfica y movimiento quedaron hechos acá).
+
 ### 2026-09-08 — Tipografías IBM Plex auto-alojadas — cierre 100 % offline (`?v=18`)
 
 Era el único fetch externo que quedaba. Ahora `consulta` no hace **ninguna** petición
