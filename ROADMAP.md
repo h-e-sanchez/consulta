@@ -73,17 +73,6 @@ cada sesión.
       Camino A, 2026-09-08.
 - [x] **Gráfico:** leyenda en barras/dispersión con serie; descargar SVG — Camino A.
 - [ ] **Gráfico:** más marcas de eje; tooltip al pasar por un punto.
-- [x] **Gráfico: función de agregación del eje Y configurable** — hecho 2026-09-09
-      (`?v=25`). Selector `AGREGACIÓN` (suma/conteo/promedio/mínimo/máximo) junto a
-      los ejes; `SUM` sigue siendo el default (compatibilidad con el comportamiento
-      histórico y con los presets, que resetean a `sum` al aplicarse). El título del
-      eje Y refleja la función elegida (`suma(valor)`, `conteo de filas`, etc.).
-      `COUNT` no requiere que la columna Y sea numérica. Persistido en `localStorage`
-      igual que `chart-type`/`chart-labels`; oculto en dispersión (grafica puntos
-      crudos, no agrupa). Nota: en área apilada, promedio/mínimo/máximo por serie se
-      siguen apilando (suman los valores agregados) — visualmente correcto para
-      `sum`/`count`, semánticamente inusual para las otras funciones; no bloquea, es
-      un caso de borde conocido.
 - [ ] **Progreso de consulta.** Tiempo transcurrido; para archivos grandes, aviso de
       que la inferencia de tipos (`SAMPLE_SIZE=-1`) puede tardar — con opción de
       acotarla.
