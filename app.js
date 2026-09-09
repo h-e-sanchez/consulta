@@ -1141,9 +1141,12 @@ function drawChart() {
   const notes = [];
   const LABEL_CAP = 40;
 
+  const xName = grid.columns?.[xi] ?? "";
+  const yName = grid.columns?.[yi] ?? "";
+
   const W = 720;
   const H = 320;
-  const pad = { top: 24, right: 18, bottom: 66, left: 66 }; // top deja aire para la leyenda
+  const pad = { top: 24, right: 18, bottom: 84, left: 78 }; // aire para leyenda (arriba) y títulos de eje
   const iW = W - pad.left - pad.right;
   const iH = H - pad.top - pad.bottom;
   const ns = "http://www.w3.org/2000/svg";
@@ -1157,6 +1160,15 @@ function drawChart() {
   };
   const asNum = (v) => (v instanceof Date ? v.getTime() : Number(v));
   const palette = ["var(--accent)", "#c9705b", "#b0894f", "#7d9a6f", "#8a7cae", "#5f7f8a", "#a8636f", "#748c5e"];
+
+  // Títulos de eje: el nombre de la columna, centrado bajo el eje X y girado en el eje Y.
+  const axisTitles = () => {
+    if (xName) add("text", { x: pad.left + iW / 2, y: H - 16, "text-anchor": "middle", class: "axis-title" }, clip(xName, 42));
+    if (yName) {
+      const yc = pad.top + iH / 2;
+      add("text", { x: 14, y: yc, "text-anchor": "middle", transform: `rotate(-90 14 ${yc})`, class: "axis-title" }, clip(yName, 32));
+    }
+  };
 
   const legend = (keys) =>
     keys.forEach((sk, i) => {
@@ -1239,11 +1251,14 @@ function drawChart() {
     const ymax = Math.max(...ys) || 1;
     const sx = (v) => pad.left + ((v - xmin) / (xmax - xmin || 1)) * iW;
     const sy = (v) => pad.top + iH - ((v - ymin) / (ymax - ymin || 1)) * iH;
+    const xDateMode = dateTickMode(grid.rows.slice(0, 4000).map((r) => r[xi]));
+    const fmtX = xDateMode ? (ms) => fmtDateTick(new Date(ms), xDateMode) : formatCompact;
     add("line", { x1: pad.left, y1: sy(ymin), x2: W - pad.right, y2: sy(ymin), stroke: "currentColor", "stroke-opacity": 0.3 });
     add("text", { x: 8, y: sy(ymax) + 4, class: "axis-label muted" }, formatCompact(ymax));
     add("text", { x: 8, y: sy(ymin) + 4, class: "axis-label muted" }, formatCompact(ymin));
-    add("text", { x: pad.left, y: H - 8, class: "axis-label muted" }, formatCompact(xmin));
-    add("text", { x: W - pad.right, y: H - 8, "text-anchor": "end", class: "axis-label muted" }, formatCompact(xmax));
+    add("text", { x: pad.left, y: pad.top + iH + 40, class: "axis-label muted" }, fmtX(xmin));
+    add("text", { x: W - pad.right, y: pad.top + iH + 40, "text-anchor": "end", class: "axis-label muted" }, fmtX(xmax));
+    axisTitles();
 
     const sKeys = all.some((p) => p.s != null) ? [...new Set(all.map((p) => p.s))].slice(0, 8) : null;
     const colorOf = (p) => (sKeys ? palette[Math.max(0, sKeys.indexOf(p.s)) % palette.length] : "var(--accent)");
@@ -1263,13 +1278,16 @@ function drawChart() {
   // Series categóricas para barras/línea/multi/área. Barras se limita para no
   // volverse ilegible; línea/multi/área admiten miles de puntos (series de tiempo).
   const rowsUsed = grid.rows.slice(0, type === "barras" ? 400 : CHART_ROW_CAP);
+  const xDateMode = dateTickMode(rowsUsed.map((r) => r[xi]));
   const allCats = [];
   const allIndex = new Map();
+  const catLabel = new Map(); // texto de categoría -> rótulo de eje (fechas: "sep 26" / ISO)
   for (const r of rowsUsed) {
     const k = fmtCell(r[xi]).text;
     if (!allIndex.has(k)) {
       allIndex.set(k, allCats.length);
       allCats.push(k);
+      if (xDateMode && r[xi] instanceof Date) catLabel.set(k, fmtDateTick(r[xi], xDateMode));
     }
   }
   // Ventana de zoom, siempre referida a la lista completa de categorías.
@@ -1356,15 +1374,22 @@ function drawChart() {
 
   drawLabels(labelPts);
 
-  // etiquetas del eje X (submuestreadas si son muchas)
-  const step = Math.max(1, Math.ceil(cats.length / 12));
+  // etiquetas del eje X (submuestreadas si son muchas). Rótulos cortos (p. ej.
+  // "sep 26" de una serie mensual) van horizontales; los largos, girados.
+  const tickText = (c) => catLabel.get(c) ?? (c.length > 12 ? c.slice(0, 11) + "…" : c);
+  const shortTicks = cats.every((c) => tickText(c).length <= 8);
+  const step = Math.max(1, Math.ceil(cats.length / (shortTicks ? 16 : 12)));
+  const ty = H - pad.bottom + 18;
   cats.forEach((c, ci) => {
     if (ci % step !== 0) return;
     const cx = type === "barras" ? pad.left + ci * bw + bw / 2 : x(ci);
-    const lbl = c.length > 12 ? c.slice(0, 11) + "…" : c;
-    add("text", { x: cx, y: H - pad.bottom + 16, "text-anchor": "end", transform: `rotate(-40 ${cx} ${H - pad.bottom + 16})`, class: "bar-label" }, lbl);
+    const attrs = shortTicks
+      ? { x: cx, y: ty, "text-anchor": "middle", class: "bar-label" }
+      : { x: cx, y: ty, "text-anchor": "end", transform: `rotate(-40 ${cx} ${ty})`, class: "bar-label" };
+    add("text", attrs, tickText(c));
   });
 
+  axisTitles();
   if (useSeries) legend(seriesKeys);
 
   wireZoom((a, b) => {
@@ -1402,7 +1427,8 @@ function downloadChartSvg() {
   style.textContent =
     `text{font-family:${v("--mono") || "monospace"};}` +
     `.bar-label,.axis-label{font-size:9px;fill:${v("--text")};}` +
-    `.axis-label.muted{fill:${v("--muted")};}` +
+    `.axis-label.muted,.axis-title{fill:${v("--muted")};}` +
+    `.axis-title{font-family:${v("--sans") || "sans-serif"};font-size:10px;}` +
     `.data-label{font-size:8px;fill:${v("--text")};paint-order:stroke;stroke:${v("--surface")};stroke-width:3px;stroke-linejoin:round;text-anchor:middle;}`;
   clone.insertBefore(style, clone.firstChild);
   clone.setAttribute("style", `background:${v("--surface")};color:${v("--text")}`);
@@ -1453,6 +1479,23 @@ function formatCompact(n) {
   return String(Math.round(n));
 }
 const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+
+// ---- formato de fechas para el eje X del gráfico ----
+const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const fmtMonthYear = (d) => `${MONTHS_ES[d.getUTCMonth()]} ${String(d.getUTCFullYear()).slice(-2)}`; // "sep 26"
+const isoDate = (d) => d.toISOString().slice(0, 10);
+const isoMinute = (d) => d.toISOString().slice(0, 16).replace("T", " ");
+// Decide cómo rotular una columna de fechas en el eje X según su granularidad:
+// todas caen el día 1 -> mensual ("sep 26"); todas a medianoche -> diaria (ISO);
+// si no, fecha y hora. Devuelve null si la columna no es de fechas.
+function dateTickMode(values) {
+  const ds = values.filter((v) => v instanceof Date);
+  if (!ds.length || ds.length !== values.filter((v) => v != null).length) return null;
+  const midnight = ds.every((d) => d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0);
+  if (midnight && ds.every((d) => d.getUTCDate() === 1)) return "month";
+  return midnight ? "day" : "datetime";
+}
+const fmtDateTick = (d, mode) => (mode === "month" ? fmtMonthYear(d) : mode === "datetime" ? isoMinute(d) : isoDate(d));
 
 // ---------------------------------------------------------------- persistencia (localStorage)
 // Todo envuelto en try/catch: modo privado, cuota llena o storage deshabilitado no rompen nada.

@@ -111,6 +111,19 @@ versión vieja unos minutos.
 
 ## Bitácora
 
+### 2026-09-08 — Gráfico: títulos de eje + eje X consciente de fechas (`?v=20`)
+
+- **Títulos de eje.** El nombre de la columna del eje X va centrado abajo; el del eje
+  Y, girado a la izquierda (clase `.axis-title`, en sans). Aplica a todos los tipos
+  (barras, línea, multi, área, dispersión). `pad` del SVG ampliado para el espacio.
+- **Eje X con fechas.** `dateTickMode()` mira los valores crudos de la columna X:
+  - todos caen el **día 1** → serie **mensual** → rótulo `"sep 26"` (mes en español +
+    año de 2 dígitos), horizontal.
+  - todos a **medianoche** pero no día 1 → **diaria** → fecha ISO `2026-09-08`, girada.
+  - con hora → `2026-09-08 14:30`, girada.
+  - Rótulos cortos (≤8) van horizontales y más densos; los largos, girados −40°.
+- La descarga a SVG embebe el estilo de `.axis-title`.
+
 ### 2026-09-08 — Nueva dirección visual: «técnico cálido / notebook» (`?v=19`)
 
 El dueño del repo encontró la identidad «Grafito» (plana, gris, mono en todo)
