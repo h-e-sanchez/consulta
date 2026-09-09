@@ -1002,6 +1002,10 @@ function pasteHeaders() {
 // ---------------------------------------------------------------- gráfico
 const CHART_TYPES = ["barras", "linea", "multi", "area", "scatter"];
 const CHART_ROW_CAP = 20000; // filas que el gráfico consume (barras usa menos)
+// Función de agregación del eje Y al agrupar por categoría (barras/línea/multi/área).
+// "sum" es el comportamiento histórico (el gráfico siempre sumaba); scatter no agrega.
+const CHART_AGGS = ["sum", "count", "avg", "min", "max"];
+const CHART_AGG_LABELS = { sum: "suma", count: "conteo", avg: "promedio", min: "mínimo", max: "máximo" };
 
 // Zoom del eje X. Siempre en términos del dominio completo (sin zoom):
 //   { kind: "cat", a, b }  → índices de la lista completa de categorías
@@ -1040,6 +1044,8 @@ function syncChartControls() {
     // sin preferencia guardada: línea si el resultado tiene una columna temporal, si no barras
     $("#chart-type").value = colKinds(grid).temporal.some(Boolean) ? "linea" : "barras";
   }
+  const savedAgg = LS.get("chart-agg");
+  $("#chart-agg").value = savedAgg && CHART_AGGS.includes(savedAgg) ? savedAgg : "sum";
   deriveChartDefaults();
   updateChartUiState();
   drawChart();
@@ -1093,6 +1099,9 @@ function updateChartUiState() {
   const type = $("#chart-type").value;
   const showSeries = type === "multi" || type === "area" || type === "barras" || type === "scatter";
   $("#chart-series-wrap").hidden = !showSeries;
+  // scatter grafica puntos crudos (x,y) sin agrupar por categoría — la agregación
+  // no aplica ahí, solo en barras/línea/multi/área.
+  $("#chart-agg-wrap").hidden = type === "scatter";
 }
 
 function setChartNote(msg) {
@@ -1137,6 +1146,7 @@ function loadChartPreset(p) {
   if (xi >= 0) $("#chart-x").value = String(xi);
   if (yi >= 0) $("#chart-y").value = String(yi);
   $("#chart-series").value = si >= 0 ? String(si) : "-1";
+  $("#chart-agg").value = "sum"; // los presets recomiendan sobre la agregación histórica (suma)
   updateChartUiState();
   setZoom(null);
   drawChart();
@@ -1197,11 +1207,14 @@ function drawChart() {
   const palette = ["var(--accent)", "#c9705b", "#b0894f", "#7d9a6f", "#8a7cae", "#5f7f8a", "#a8636f", "#748c5e"];
 
   // Títulos de eje: el nombre de la columna, centrado bajo el eje X y girado en el eje Y.
-  const axisTitles = () => {
+  // yLabel es opcional — barras/línea/multi/área lo pasan con la función de agregación
+  // aplicada (p. ej. "suma(monto)"); dispersión no agrega y usa el nombre de columna tal cual.
+  const axisTitles = (yLabel) => {
+    const yText = yLabel ?? yName;
     if (xName) add("text", { x: pad.left + iW / 2, y: H - 16, "text-anchor": "middle", class: "axis-title" }, clip(xName, 42));
-    if (yName) {
+    if (yText) {
       const yc = pad.top + iH / 2;
-      add("text", { x: 14, y: yc, "text-anchor": "middle", transform: `rotate(-90 14 ${yc})`, class: "axis-title" }, clip(yName, 32));
+      add("text", { x: 14, y: yc, "text-anchor": "middle", transform: `rotate(-90 14 ${yc})`, class: "axis-title" }, clip(yText, 32));
     }
   };
 
@@ -1336,14 +1349,35 @@ function drawChart() {
   if (seriesReq && si < 0) notes.push("Sin columna de serie: elige una categórica o cambia la consulta.");
 
   const seriesKeys = useSeries ? [...new Set(rowsUsed.map((r) => fmtCell(r[si]).text))].slice(0, 8) : ["_"];
-  const matrix = seriesKeys.map(() => new Array(cats.length).fill(0));
+  // Función de agregación del eje Y (ver CHART_AGGS). "sum" es el comportamiento
+  // histórico. min/max arrancan en ±Infinity para no pisar el primer valor real de
+  // la celda; counts lleva cuántos valores numéricos cayeron en cada celda (para avg
+  // y para no dejar ±Infinity en celdas sin datos).
+  const agg = $("#chart-agg").value;
+  const seed = agg === "min" ? Infinity : agg === "max" ? -Infinity : 0;
+  const matrix = seriesKeys.map(() => new Array(cats.length).fill(seed));
+  const counts = seriesKeys.map(() => new Array(cats.length).fill(0));
   for (const r of rowsUsed) {
     const ci = catIndex.get(fmtCell(r[xi]).text);
     if (ci == null) continue;
     const sk = useSeries ? seriesKeys.indexOf(fmtCell(r[si]).text) : 0;
     if (sk < 0) continue;
+    if (agg === "count") {
+      matrix[sk][ci] += 1;
+      continue;
+    }
     const v = asNum(r[yi]);
-    if (Number.isFinite(v)) matrix[sk][ci] += v;
+    if (!Number.isFinite(v)) continue;
+    counts[sk][ci] += 1;
+    if (agg === "min") matrix[sk][ci] = Math.min(matrix[sk][ci], v);
+    else if (agg === "max") matrix[sk][ci] = Math.max(matrix[sk][ci], v);
+    else matrix[sk][ci] += v; // sum y avg acumulan igual; avg divide al cierre
+  }
+  if (agg === "avg") {
+    matrix.forEach((row, sidx) => row.forEach((_, ci) => { row[ci] = counts[sidx][ci] ? row[ci] / counts[sidx][ci] : 0; }));
+  } else if (agg === "min" || agg === "max") {
+    // celdas sin ningún valor numérico: no dejar ±Infinity filtrando a la escala del gráfico
+    matrix.forEach((row) => row.forEach((v, ci) => { if (!Number.isFinite(v)) row[ci] = 0; }));
   }
 
   if (type === "barras" && cats.length * seriesKeys.length > 140) {
@@ -1424,7 +1458,7 @@ function drawChart() {
     add("text", attrs, tickText(c));
   });
 
-  axisTitles();
+  axisTitles(agg === "count" ? "conteo de filas" : `${CHART_AGG_LABELS[agg]}(${yName})`);
   if (useSeries) legend(seriesKeys);
 
   wireZoom((a, b) => {
@@ -1786,6 +1820,10 @@ $("#chart-type").addEventListener("change", () => {
     drawChart();
   })
 );
+$("#chart-agg").addEventListener("change", () => {
+  LS.set("chart-agg", $("#chart-agg").value);
+  drawChart();
+});
 $("#chart-labels").checked = LS.get("chart-labels", false) === true;
 $("#chart-labels").addEventListener("change", () => {
   LS.set("chart-labels", $("#chart-labels").checked);
