@@ -7,7 +7,8 @@
 Parte del portafolio **Control de gestión, construido como software**, de Hernán Elías Sánchez:
 `consulta` es el taller (lo que usa quien analiza) y
 [`centinela`](https://h-e-sanchez.github.io/centinela/) es la vitrina de reportes Power BI
-(lo que ve quien decide).
+(lo que ve quien decide). El manual es [`cartilla`](https://h-e-sanchez.github.io/cartilla/):
+Python y pandas para quien viene de Excel.
 
 ## Diseño
 
