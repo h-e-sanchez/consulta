@@ -4,6 +4,11 @@
 > y grafica una tabla de datos —CSV, Parquet o Excel— sin backend, sin ingesta y sin
 > que el archivo abandone tu equipo.*
 
+Parte del portafolio **Control de gestión, construido como software**, de Hernán Sánchez:
+`consulta` es el taller (lo que usa quien analiza) y
+[`centinela`](https://h-e-sanchez.github.io/centinela/) es la vitrina de reportes Power BI
+(lo que ve quien decide).
+
 ## Diseño
 
 - **Ejecución local.** DuckDB-WASM sobre un Web Worker; el archivo se monta como
@@ -106,8 +111,10 @@ nunca se transmite.
 
 ## English
 
-In-client OLAP for exploratory inspection of tabular data: SQL over CSV and Parquet,
-no backend, no ingestion, the file never leaves the browser. Reads CSV, Parquet and
+A browser-only data notebook by Hernán Sánchez (management control, FP&A, People
+Analytics): profile, query with SQL and chart any CSV, Parquet or Excel table, with no
+backend and no ingestion; the file never leaves the browser. Part of the same portfolio as
+[centinela](https://h-e-sanchez.github.io/centinela/), a Power BI report showcase. Reads CSV, Parquet and
 Excel / ODS (multi-sheet workbooks get a sheet picker; SheetJS is vendored and loaded
 on demand). DuckDB-WASM on a Web Worker; one-pass enriched profiling (a schema view
 grouping columns by role, plus quantiles, nulls, zeros, per-dimension frequencies, a
