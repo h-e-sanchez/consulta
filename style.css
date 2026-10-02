@@ -838,3 +838,18 @@ details.explain pre {
 .site-footer a:hover { color: var(--accent); }
 
 [hidden] { display: none !important; }
+
+/* ------------------------------------------------------------------ relato de portafolio
+   Mismo bloque que centinela: firma del autor y portafolio compartido. */
+.site-header .firma { margin: 0.35rem 0 0; font-size: var(--fs-sm); color: var(--muted); }
+.site-header .firma a { color: var(--muted); }
+.portafolio { margin-bottom: var(--sp-4); }
+.portafolio-titulo { margin: 0 0 var(--sp-2); color: var(--text); }
+.portafolio-compartido { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); }
+.portafolio-compartido .callout { margin: 0; color: var(--text); }
+.portafolio-compartido .callout a { color: var(--accent); }
+.callout.actual { border-left-color: var(--faint); }
+.estas-aqui {
+  float: right; font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+  border: 1px solid var(--border-strong); border-radius: 999px; padding: 0 8px; margin-left: var(--sp-2);
+}
