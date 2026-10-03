@@ -845,11 +845,33 @@ details.explain pre {
 .site-header .firma a { color: var(--muted); }
 .portafolio { margin-bottom: var(--sp-4); }
 .portafolio-titulo { margin: 0 0 var(--sp-2); color: var(--text); }
-.portafolio-compartido { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); }
-.portafolio-compartido .callout { margin: 0; color: var(--text); }
-.portafolio-compartido .callout a { color: var(--accent); }
-.callout.actual { border-left-color: var(--faint); }
-.estas-aqui {
-  float: right; font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
-  border: 1px solid var(--border-strong); border-radius: 999px; padding: 0 8px; margin-left: var(--sp-2);
+
+/* ---- portafolio compartido: mismo bloque en centinela, consulta y cartilla ---- */
+.portafolio-compartido { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--sp-3); }
+.sitio {
+  display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-4);
+  border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--text);
 }
+.sitio h3 { margin: 0; font-size: 1.15rem; }
+.sitio p { margin: 0; font-size: var(--fs-sm); }
+.sitio .sitio-rol {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2);
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+}
+.sitio .sitio-acciones { margin-top: auto; padding-top: var(--sp-2); display: flex; align-items: center; gap: var(--sp-3); }
+.sitio-acciones a { color: var(--accent); }
+.sitio-acciones .sitio-boton {
+  display: inline-block; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--accent);
+  background: var(--accent); color: var(--surface); font-weight: 600; text-decoration: none;
+}
+.sitio-acciones .sitio-boton:hover { filter: brightness(1.12); }
+.sitio.actual { border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.sitio.actual .sitio-boton { background: transparent; color: var(--accent); }
+.estas-aqui {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; color: var(--surface);
+  background: var(--accent); border-radius: 999px; padding: 2px 9px;
+}
+#acerca p { max-width: 68ch; }
+
+/* ---- etiqueta sobre el nombre: dice qué es el sitio antes de la marca ---- */
+.etiqueta-sitio { flex: 1 0 100%; margin: 0 0 -6px; font-size: 0.74rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }

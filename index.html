@@ -41,6 +41,7 @@
 </head>
 <body>
   <header class="site-header">
+    <p class="etiqueta-sitio">Taller SQL · análisis de datos en el navegador</p>
     <h1>consulta</h1>
     <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Cambiar el tema">noche</button>
     <p class="firma">por <a href="https://www.linkedin.com/in/hern%C3%A1n-el%C3%ADas-s%C3%A1nchez-aguilera/" rel="noopener">Hernán Elías Sánchez</a> · parte de su portafolio <em>Control de gestión, construido como software</em></p>
@@ -253,26 +254,39 @@
   </main>
 
   <footer class="site-footer">
-    <section class="portafolio" aria-label="Portafolio">
-      <p class="portafolio-titulo"><strong>Control de gestión, construido como software</strong> ·
-        portafolio de Hernán Elías Sánchez</p>
+    <section id="portafolio" class="portafolio" aria-label="Portafolio">
+      <h2>Portafolio</h2>
+      <p class="hint"><strong>Control de gestión, construido como software</strong> · tres sitios de
+        Hernán Elías Sánchez: cada uno muestra una parte del mismo oficio.</p>
       <div class="portafolio-compartido">
-        <div class="callout">
-          <strong>centinela</strong>: la vitrina. Reportes Power BI de control de gestión con datos
-          sintéticos, el modelo y el DAX a la vista.
-          <a href="https://h-e-sanchez.github.io/centinela/">Ver centinela</a>
-        </div>
-        <div class="callout actual">
-          <span class="estas-aqui">estás aquí</span>
-          <strong>consulta</strong>: el taller. SQL, perfilado y gráficos sobre CSV, Parquet o Excel,
-          sin que el archivo salga de tu equipo.
-        </div>
-        <div class="callout">
-          <strong>cartilla</strong>: el manual. Python y pandas para quien viene de Excel, con ejemplos
-          que se ejecutan en el navegador.
-          <a href="https://h-e-sanchez.github.io/cartilla/">Abrir cartilla</a>
-        </div>
+        <article class="sitio">
+          <p class="sitio-rol">La vitrina</p>
+          <h3>centinela</h3>
+          <p>Reportes Power BI de control de gestión, personas y contratistas, con datos sintéticos, el modelo y el DAX a la vista.</p>
+          <p class="sitio-acciones"><a class="sitio-boton" href="https://h-e-sanchez.github.io/centinela/">Ver centinela →</a> <a href="https://github.com/h-e-sanchez/centinela">repo</a></p>
+        </article>
+        <article class="sitio actual" aria-current="page">
+          <p class="sitio-rol">El taller <span class="estas-aqui">Estás aquí</span></p>
+          <h3>consulta</h3>
+          <p>SQL, perfilado y gráficos sobre CSV, Parquet o Excel, sin que el archivo salga de tu equipo.</p>
+          <p class="sitio-acciones"><a class="sitio-boton" href="#">Volver al inicio ↑</a> <a href="https://github.com/h-e-sanchez/consulta">repo</a></p>
+        </article>
+        <article class="sitio">
+          <p class="sitio-rol">El manual</p>
+          <h3>cartilla</h3>
+          <p>Python y pandas para quien viene de Excel, con ejemplos que se ejecutan en el navegador.</p>
+          <p class="sitio-acciones"><a class="sitio-boton" href="https://h-e-sanchez.github.io/cartilla/">Abrir cartilla →</a> <a href="https://github.com/h-e-sanchez/cartilla">repo</a></p>
+        </article>
       </div>
+    </section>
+
+    <section id="acerca">
+      <h2>Acerca de</h2>
+      <p>Soy Ingeniero Civil Industrial con 8 años en control de gestión, FP&amp;A y People Analytics.
+        Construyo con Python y Power BI las herramientas que uso: que la información llegue a quien
+        decide a tiempo, trazable y sin trabajo manual. Todo lo publicado aquí usa datos sintéticos.</p>
+      <p class="perfil-enlaces"><a href="https://www.linkedin.com/in/hern%C3%A1n-el%C3%ADas-s%C3%A1nchez-aguilera/" rel="noopener">LinkedIn</a> ·
+        <a href="https://github.com/h-e-sanchez" rel="noopener">GitHub</a></p>
     </section>
     <p><a href="https://www.linkedin.com/in/hern%C3%A1n-el%C3%ADas-s%C3%A1nchez-aguilera/" rel="noopener">Hernán Elías Sánchez</a> ·
       <a href="https://github.com/h-e-sanchez/consulta">código</a> ·
