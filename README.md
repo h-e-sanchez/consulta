@@ -103,8 +103,8 @@ si el runtime local no carga (deploy en un subpath inesperado, archivo ausente);
 SheetJS se importa (dinámico) desde `vendor/sheetjs/` solo al abrir una planilla.
 Regeneración documentada en [`vendor/README.md`](vendor/README.md).
 
-Las tipografías **IBM Plex** también van auto-alojadas (`vendor/fonts/`, subset latin,
-declaradas con `@font-face` en `style.css`). `consulta` **no hace ninguna petición
+Las tipografías **Public Sans** y **Geist Mono** también van auto-alojadas (`vendor/fonts/`,
+subset latin, declaradas con `@font-face` en `tema.css`, el tema común del portafolio). `consulta` **no hace ninguna petición
 saliente**: con red o sin ella, se ve y funciona igual. El archivo de datos del usuario
 nunca se transmite.
 
@@ -125,6 +125,6 @@ CTE assistant that composes `WITH` chains; SVG charts (bar, line, multi-series,
 stacked area, scatter) with drag-to-zoom on the X axis, toggleable data labels,
 per-series legend and standalone-SVG export; CSV export. A deterministic
 synthetic-relation generator with
-four time-oriented shapes. The DuckDB-WASM runtime, the Excel reader and the IBM Plex
-fonts are all self-hosted under `vendor/`, so the site makes **no outbound request** —
+four time-oriented shapes. The DuckDB-WASM runtime, the Excel reader and the Public Sans /
+Geist Mono fonts are all self-hosted under `vendor/`, so the site makes **no outbound request** —
 online or offline, with or without network. No build step.

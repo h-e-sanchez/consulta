@@ -1204,7 +1204,7 @@ function drawChart() {
     return e;
   };
   const asNum = (v) => (v instanceof Date ? v.getTime() : Number(v));
-  const palette = ["var(--accent)", "#c9705b", "#b0894f", "#7d9a6f", "#8a7cae", "#5f7f8a", "#a8636f", "#748c5e"];
+  const palette = ["var(--accent)", "#3b6fb6", "#c07a1f", "#8a64c0", "#2a9aa8", "#c2507a", "#6b7a8f", "#9a8a2e"];
 
   // Títulos de eje: el nombre de la columna, centrado bajo el eje X y girado en el eje Y.
   // yLabel es opcional — barras/línea/multi/área lo pasan con la función de agregación
@@ -1494,7 +1494,7 @@ function downloadChartSvg() {
   });
   const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
   style.textContent =
-    `text{font-family:${v("--mono") || "monospace"};}` +
+    `text{font-family:${v("--sans") || "sans-serif"};font-variant-numeric:tabular-nums;}` +
     `.bar-label,.axis-label{font-size:9px;fill:${v("--text")};}` +
     `.axis-label.muted,.axis-title{fill:${v("--muted")};}` +
     `.axis-title{font-family:${v("--sans") || "sans-serif"};font-size:10px;}` +
