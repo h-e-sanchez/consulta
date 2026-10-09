@@ -922,6 +922,7 @@ function resetQueryPanel() {
 async function runQuery() {
   const sql = $("#sql-editor").value.trim();
   if (!sql) return false;
+  window.analitica?.unaVez("consulta-ejecutada");
   const meta = $("#result-meta");
   meta.classList.remove("err");
   meta.textContent = "Ejecutando…";
