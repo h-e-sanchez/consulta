@@ -1,7 +1,7 @@
-# Guía de estilo — portafolio (`consulta`, `centinela`, `cartilla`, `conciliador`)
+# Guía de estilo — portafolio (`centinela`, `consulta`, `cartilla`, `acervo`, `fiabilidad`, `cuadratura`)
 
 > Las **decisiones** de identidad visual del portafolio, ya aplicadas en `tema.css`
-> (copia idéntica en los cuatro repos) y en el `style.css` de cada sitio. Es la
+> (copia idéntica en los seis repos publicados) y en el `style.css` de cada sitio. Es la
 > referencia viva: si algo acá y el código no coinciden, gana el código y se corrige
 > este documento. Para la investigación previa, ver
 > [`referencias-estilo.md`](referencias-estilo.md); para la cola visual de septiembre,
@@ -9,24 +9,25 @@
 
 ---
 
-## 1. Identidad — «Grafito»
+## 1. Identidad — «Editorial»
 
-Los cuatro sitios se leen como **una misma familia de herramientas de control de
-gestión**: neutros fríos, una sola sans para todo (cifras incluidas), un único acento
-**verde bosque** usado con disciplina, superficies con **fondo sutil y sin borde**,
-esquinas de **6 px**, **sin sombras** y **sin rieles laterales de color**. El color
-semántico se reserva para lo que pide atención: «ok» va en gris, solo alerta y crítica
-llevan color.
+Los seis sitios se leen como **un mismo oficio publicado como documentación**: la
+estructura viene de sitios editoriales de herramientas (referencia: rea.tools). Barra
+superior común con los seis sitios, portada con una **promesa grande** en el H1, secciones
+separadas por **líneas finas a todo el ancho** y mucho aire, y tarjetas con **borde fino
+sin relleno**. La jerarquía la marca el **tamaño, no el color**: casi todo en grises, el
+**verde bosque** solo en enlaces y en lo activo, y los botones principales en **tinta**.
+El color semántico se reserva para lo que pide atención: «ok» va en gris.
 
-Elegido el 2026-10-07 en un configurador con 13 apartados (tipografía, números,
-disposición, espaciado, acento, esquinas, superficies, estados, botones, etiqueta,
-modo, favicon y ancho). Disposición «Columna» en los cuatro sitios y espaciado compacto.
+Elegido el 2026-10-18 sobre un prototipo en cuadratura: verde como acento (no el azul de
+la referencia) y modo noche en **pizarra azulada** (paleta Catppuccin Mocha).
 
 > **Historia:** hasta `?v=18` consulta usaba un primer «Grafito» (mono en todo, cero
 > redondeo, acento teal); en `?v=19` pasó a «técnico cálido / notebook» (papel crema,
-> IBM Plex, azul pizarra), que luego copiaron centinela, cartilla y conciliador. Ese
-> tema se parecía demasiado a la estética por defecto de las herramientas de IA, así
-> que en octubre de 2026 se volvió a una base fría y se homologaron los cuatro sitios.
+> IBM Plex, azul pizarra), que luego copiaron los demás sitios. Ese tema se parecía
+> demasiado a la estética por defecto de las herramientas de IA, así que el 2026-10-07
+> se volvió a una base fría («Grafito»: superficies con relleno, cuatro sitios). El
+> 2026-10-18 se pasó a «Editorial» y se sumaron acervo, fiabilidad y cuadratura.
 
 ---
 
@@ -36,20 +37,20 @@ modo, favicon y ancho). Disposición «Columna» en los cuatro sitios y espaciad
 
 | Token | Día | Noche | Uso |
 |---|---|---|---|
-| `--bg` | `#f7f8fa` | `#0d0f12` | fondo de página |
-| `--surface` | `#ffffff` | `#14171c` | controles, editor, tablas de datos |
-| `--surface-2` | `#f0f2f5` | `#1b1f25` | tarjetas, KPI, callouts, código, thead |
-| `--border` | `#e3e6eb` | `#262b33` | divisores de 1 px |
-| `--border-strong` | `#c9ced6` | `#3a414c` | inputs, botón secundario |
-| `--text` | `#111418` | `#e8eaed` | texto, borde de la tarjeta actual |
-| `--muted` | `#5b636e` | `#9aa2ad` | texto secundario |
-| `--faint` | `#8a929c` | `#6b737e` | terciario, nulos |
-| `--accent` | `#1d6b47` | `#5cc995` | verde bosque |
-| `--accent-weak` | `#e6f0eb` | `#13261d` | callout, fila seleccionada |
-| `--on-accent` | `#ffffff` | `#0d0f12` | texto sobre acento |
+| `--bg` | `#ffffff` | `#1e1e2e` | fondo de página |
+| `--surface` | `#ffffff` | `#1e1e2e` | controles, editor, tablas de datos |
+| `--surface-2` | `#f4f6f8` | `#181825` | código, thead, pistas de barras (no tarjetas) |
+| `--border` | `#e0e5e9` | `#45475a` | divisores, líneas de sección, borde de tarjetas |
+| `--border-strong` | `#c5ccd3` | `#585b70` | inputs, botón secundario |
+| `--text` | `#20252b` | `#cdd6f4` | texto y relleno del botón principal |
+| `--muted` | `#5b6570` | `#a6adc8` | texto secundario, bajada |
+| `--faint` | `#8a939c` | `#7f849c` | terciario, nulos |
+| `--accent` | `#1d6b47` | `#a6e3a1` | verde: enlaces y lo activo |
+| `--accent-weak` | `#e8f1ec` | `#263a2c` | fila seleccionada |
+| `--on-accent` | `#ffffff` | `#1e1e2e` | texto sobre acento |
 | `--ok` | `= --muted` | `= --muted` | dentro de rango: neutro |
-| `--alerta` | `#a35f00` | `#e0a33d` | ámbar |
-| `--critica` | `#c2312b` | `#f0716b` | rojo (antes `--error` en consulta) |
+| `--alerta` | `#9a5b00` | `#f9e2af` | ámbar |
+| `--critica` | `#b8322c` | `#f38ba8` | rojo |
 
 ### Modo día / noche
 
@@ -64,9 +65,9 @@ sentidos. Cualquier regla que dependa del modo oscuro se escribe en los dos bloq
 
 | Va | No va |
 |---|---|
-| Enlaces, etiqueta sobre el H1 | Cuerpo de texto |
-| Botón primario, `.sitio-boton` | Bordes de tarjetas |
-| Ring de foco (`--focus`) | Estado «ok» |
+| Enlaces | Cuerpo de texto, eyebrow |
+| Sitio actual en la barra (subrayado) | Botón principal (va en tinta) |
+| Ring de foco (`--focus`) | Bordes de tarjetas, estado «ok» |
 | Pestaña activa, serie «Real» de un gráfico | Fondos de sección |
 
 ### Colores de rol y paleta de gráfico
@@ -102,7 +103,7 @@ declaradas en `tema.css`. **Sin peticiones a Google Fonts** en ninguno de los cu
 
 | Familia | Peso | Dónde |
 |---|---|---|
-| **Public Sans** | 700 | `h1`, `h2` (tracking −0.025 / −0.015em) |
+| **Public Sans** | 650 | `h1`, `h2`, `h3` (tracking −0.035 / −0.03 / −0.02em, interlínea 1,14) |
 | **Public Sans** | 600 | `h3`, titular, botones, `b, strong` |
 | **Public Sans** | 400–500 | cuerpo, tablas, KPI, ejes de gráfico |
 | **Geist Mono** | 400–500 | solo código: SQL, DAX, Python, `code`, nombres de archivo |
@@ -111,35 +112,48 @@ declaradas en `tema.css`. **Sin peticiones a Google Fonts** en ninguno de los cu
 (clases `.num`, `td.num`, `.valor`, `.kpi-valor`, `.cifra`), para que las columnas se
 alineen sin cambiar de familia. Sin mayúsculas espaciadas en etiquetas.
 
-Escala: `--fs-xs 0.75rem` · `--fs-sm 0.84rem` · `--fs-md 1rem` · `--fs-lg 1.2rem` ·
-`--fs-xl 1.5rem` · `--fs-2xl 2rem`. Base 15 px.
+Escala: `--fs-xs 0.78rem` · `--fs-sm 0.875rem` · `--fs-md 1rem` · `--fs-lg 1.2rem` ·
+`--fs-xl clamp(1.6rem, 2.6vw, 2.2rem)` (h2) · `--fs-2xl clamp(2.4rem, 5.6vw, 4.4rem)` (h1 de
+portada). El h1 de las subpáginas (`.site-header h1`) va en `clamp(2rem, 4vw, 3rem)`. Base
+16 px, interlínea 1,65.
 
 ---
 
 ## 4. Espaciado y layout
 
-Compacto: `--sp-1 4px` · `--sp-2 8px` · `--sp-3 12px` · `--sp-4 18px` (margen de
-página) · `--sp-6 24px` · `--sp-8 36px`; celdas de tabla `--celda: 4px 8px`.
+Escala: `--sp-1 4px` · `--sp-2 8px` · `--sp-3 12px` · `--sp-4 18px` · `--sp-6 24px` ·
+`--sp-8 36px`; aire entre secciones `--sp-seccion` (hasta 3,8rem); celdas `--celda: 6px 10px`.
 
 - **Dos anchos:** `--ancho-lectura: 820px` (`main`: cartilla, glosarios) y
-  `--ancho-reporte: 1100px` (`main.ancho`: portadas de centinela, consulta y
-  conciliador; reporte y datos de centinela).
-- **Disposición «Columna»:** encabezado, contenido y bloque Portafolio uno bajo otro.
+  `--ancho-reporte: 1100px` (`main.ancho` y la barra superior, `.contenedor`).
+- **Secciones:** cada `main > section` lleva una línea fina a todo el ancho de la ventana y
+  aire arriba y abajo. Las páginas o bloques tipo aplicación se excluyen con la clase
+  **`app`** (`main.app` en el reporte y los datos de centinela y el módulo de cartilla;
+  `section.app` en la zona de carga de consulta).
 - Tablas, gráficos y código anchos scrollean dentro de su contenedor.
 
 ---
 
 ## 5. Componentes compartidos (`tema.css`)
 
-- **Encabezado** `.site-header`: `.etiqueta-sitio` (acento, texto normal), `h1` con el
-  nombre del producto, `.titular`, `.firma`, `.tagline` y `#theme-toggle` arriba a la derecha.
+- **Barra superior** `header.barra-sup` > `.contenedor.barra-interior`: `.marca`
+  («Control de gestión, construido como software» + «por Hernán Elías Sánchez»),
+  `nav.sitios` con los seis sitios (el actual con `aria-current="page"`) y `.barra-iconos`
+  con `#theme-toggle.icono-btn` (luna/sol) y el enlace a GitHub del repo.
+- **En esta página** `nav.en-pagina` (pegajosa, solo en portadas largas): `tema.js` marca
+  con `aria-current="location"` el enlace de la sección visible.
+- **Portada** `section.portada#portada`: `.eyebrow` (nombre del producto en negrita + qué
+  es), `h1` con la **promesa** (no el nombre del producto), `.lede`, `.acciones` (botón
+  principal + `.enlace-texto`) y `.firma`. Opcional: `.portada-grilla` con un `.panel`.
+- **Subpáginas:** conservan `.site-header` (migas, h1 y tagline) bajo la barra.
 - **Estados** `.estado.ok | .alerta | .critica | .neutro`: chip con punto de 6 px y
   fondo del mismo tono al 12 %.
-- **Botones** `.btn`, `.btn.primario`, `.btn-primario`: relleno de acento con
-  `--on-accent`; secundario con borde `--border-strong`.
-- **Portafolio** `.portafolio-compartido` > `.sitio` (fondo `--surface-2`), `.sitio.actual`
-  (borde `--text` + `.estas-aqui`), `.sitio.proximo` (borde discontinuo). Acciones:
-  `.sitio-boton` (relleno) + `.sitio-github` (marca de GitHub + «GitHub»).
+- **Botones** `.btn`, `.btn.primario`, `.btn-primario`: principal en **tinta** (`--text` de
+  fondo, `--bg` de texto); secundario transparente con borde `--border-strong`. Los
+  `input[type=file]` usan el mismo estilo.
+- **Portafolio** `.portafolio-compartido` > `.sitio`: lista de los seis sitios con línea
+  inferior, nombre enlazado, rol a la derecha, descripción y «Código en GitHub». El actual
+  (`.sitio.actual`) agrega «· estás aquí» en verde.
 - **Favicon:** SVG de letras en el acento: `ce`, `co`, `ca`, `cn`.
 - **Tema** `tema.js` (copia idéntica): `<script src="tema.js" data-sitio="consulta">` en
   el `<head>`, sin `defer`. Emite `tema:cambio` y `<sitio>:themechange`; `app.js` de
@@ -207,12 +221,12 @@ el acento verde bosque `#1d6b47` sobre `--bg`.
 ## 9. Checklist para un repo nuevo del portafolio
 
 1. **Copiar tal cual** `tema.css`, `tema.js` y `vendor/fonts/` (`public-sans.woff2`,
-   `geist-mono.woff2`) desde cualquiera de los cuatro repos. Si se cambia `tema.css` o
-   `tema.js`, se cambia en los cinco a la vez: deben quedar idénticos.
+   `geist-mono.woff2`) desde cualquiera de los seis repos. Si se cambia `tema.css` o
+   `tema.js`, se cambia en todos a la vez: deben quedar idénticos.
 2. **`<head>`:** favicon de letras, `<link rel="preload">` de `public-sans.woff2`,
    `tema.css` antes de `style.css`, y `<script src="tema.js" data-sitio="<repo>">`.
 3. **`style.css`:** solo lo propio del sitio; nunca redefinir tokens.
-4. **Bloque Portafolio:** sumar la tarjeta del repo nuevo en los demás sitios (un PR por
-   repo, contra `main`).
+4. **Barra y Portafolio:** sumar el sitio nuevo a `nav.sitios` y a la lista del Portafolio
+   en todos los sitios (un PR por repo, contra `main`).
 5. **Mantener:** un solo acento, mono solo para código, cifras con `tabular-nums`, el
    presupuesto de movimiento (§6) y la regla de capas del texto explicativo (§7).
