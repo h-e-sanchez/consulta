@@ -8,16 +8,7 @@ code { font-family: var(--mono); font-size: 0.88em; }
    negrita 700. */
 b, strong { font-weight: 600; }
 
-/* enlaces: color de texto + subrayado tenue (siempre legible); acento al hover/foco. */
-a {
-  color: inherit;
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--border-strong);
-  text-underline-offset: 2px;
-  transition: color var(--t), text-decoration-color var(--t);
-}
-a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+
 a:focus-visible { outline: var(--focus); outline-offset: 2px; }
 summary:focus-visible { outline: var(--focus); outline-offset: 2px; }
 
@@ -40,33 +31,12 @@ summary:focus-visible { outline: var(--focus); outline-offset: 2px; }
   border-bottom: 1px solid var(--border);
 }
 
-/* ---- interruptor día / noche ---- */
-.theme-toggle {
-  position: absolute;
-  top: 2.4rem;
-  right: 1.5rem;
-  padding: 0.3rem 0.65rem;
-  font-family: var(--sans);
-  font-size: var(--fs-xs);
-  text-transform: lowercase;
-  letter-spacing: 0.02em;
-  line-height: 1;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  transition: color var(--t), border-color var(--t), background-color var(--t);
-}
-.theme-toggle:hover { color: var(--text); border-color: var(--accent); }
-/* en pantallas angostas el subtítulo pasa a ancho completo: deja aire para el botón */
-@media (max-width: 640px) {
-  .tagline, .tagline-sub { padding-right: 4.5rem; }
-}
+
+
 .site-header h1 {
   margin: 0;
   font-family: var(--sans);
-  font-size: var(--fs-2xl);
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 600;
   letter-spacing: -0.022em;
   line-height: 1.1;
@@ -115,11 +85,6 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 2px; cur
 }
 .defs code { color: var(--accent); }
 
-main {
-  max-width: var(--ancho-reporte);
-  margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
-}
 
 /* ---- carga ---- */
 .drop-zone {
@@ -139,8 +104,8 @@ main {
   display: inline-block;
   margin: 0.7rem 0;
   padding: 0.55rem 1.3rem;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--text);
+  color: var(--bg);
   border-radius: var(--r);
   cursor: pointer;
   font-family: var(--sans);
@@ -566,15 +531,15 @@ select:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-
   outline-offset: 2px;
 }
 button.primary {
-  background: var(--accent);
-  color: var(--on-accent);
-  border-color: var(--accent);
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
   font-weight: 500;
   cursor: pointer;
   padding: 0.45rem 1.1rem;
   transition: filter var(--t);
 }
-button.primary:hover { filter: brightness(1.08); }
+button.primary:hover { opacity: 0.88; }
 button.primary:disabled { opacity: 0.5; cursor: progress; filter: none; }
 button.ghost {
   cursor: pointer;
@@ -731,3 +696,6 @@ details.explain pre {
 .portafolio { margin-bottom: var(--sp-4); }
 .portafolio-titulo { margin: 0 0 var(--sp-2); color: var(--text); }
 
+
+/* tema Editorial: la zona de carga no lleva línea de sección; deja aire antes del portafolio */
+.drop-zone.app { margin-bottom: var(--sp-8); }
